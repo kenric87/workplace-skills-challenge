@@ -278,7 +278,7 @@ module.exports = async function handler(req, res) {
     ].join("\n\n");
 
     const apiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(process.env.GEMINI_MODEL || "gemini-2.5-flash")}:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(process.env.GEMINI_MODEL || "gemini-3.8-flash")}:generateContent`,
       {
         method: "POST",
         headers: {
