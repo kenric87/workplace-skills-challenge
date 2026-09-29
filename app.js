@@ -506,7 +506,7 @@ async function requestAiFeedback(container) {
     });
     const result = await response.json();
     if (!response.ok) {
-      if (response.status === 503 && result.fallback?.source === "rules") {
+      if ([429, 503].includes(response.status) && result.fallback?.source === "rules") {
         renderAiQuestion(container, result.fallback);
         return;
       }
