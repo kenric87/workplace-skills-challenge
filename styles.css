@@ -553,6 +553,50 @@ h1 {
   background: var(--green-light);
 }
 
+.ai-coach {
+  margin-top: 22px;
+}
+
+.ai-coach .feedback-title {
+  font-size: 17px;
+}
+
+.ai-question {
+  margin-top: 20px;
+  padding-top: 17px;
+  border-top: 1px solid #dce6dc;
+}
+
+.ai-question h3 {
+  margin: 0 0 9px;
+  font-size: 16px;
+}
+
+.ai-prompt {
+  margin: 15px 0 0;
+  color: #34443a;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.65;
+}
+
+.ai-choice[aria-pressed="true"] {
+  border-color: #77a389;
+  background: var(--green-light);
+}
+
+.ai-answer {
+  padding: 15px;
+}
+
+.ai-answer:empty {
+  display: none;
+}
+
+.ai-answer .rule-list {
+  margin-top: 10px;
+}
+
 .reflection-response {
   min-height: 20px;
   margin: 10px 0 0;

@@ -32,21 +32,33 @@ const labels = {
   source: "Source",
   format: "Challenge format",
   duration: "Estimated time",
-  durationValue: "About 5–7 minutes · 9 questions",
+  durationValue: "About 5–7 minutes · up to 9 decisions",
   journey: "Your challenge",
   ending: "Scenario complete",
   notFound: "Scenario data not found",
   finishScenario: "View scenario wrap-up",
   report: "Your practice profile",
-  reportIntro: "Your radar chart summarizes patterns in the choices you made across all three scenarios.",
+  reportIntro: "Your radar chart summarizes patterns in the choices you made across all three scenarios. An AI coach can add feedback and a targeted practice question.",
   scoreScale: "Each axis is a scenario-specific practice indicator from 0 to 100. 50 is the neutral midpoint.",
   strongest: "Relative strength in this set",
   growthArea: "An area to practice next",
   chartLabel: "Radar chart showing practice indicators for compliance, judgment, and communication",
-  completed: "All 9 questions completed",
+  completed: "Decisions completed",
   nextScenario: "Continue to next scenario",
   resultButton: "View your overall profile",
   questionOf: "of",
+  aiTitle: "Your AI learning coach",
+  aiLoading: "Reviewing your choices and preparing a targeted practice question…",
+  aiUnavailable: "AI coaching is not connected yet. Add your Vercel API endpoint to ai-config.js after deploying the backend.",
+  aiPrivacy: "If you choose to continue, your choices and related scenario text and rule excerpts (not your name) will be sent to Google Gemini for feedback and one extra question. Do not include confidential or personal information.",
+  aiStart: "Generate AI feedback",
+  aiError: "AI feedback could not be generated.",
+  retryAi: "Try again",
+  aiNextQuestion: "A follow-up question for you",
+  aiChoicePrompt: "Choose your response",
+  aiQuestionNote: "This extra practice question does not change your radar chart scores.",
+  aiAligned: "That response follows the cited guidance.",
+  aiMisaligned: "Review the guidance and consider another response.",
 };
 
 let scenarios = [];
@@ -103,7 +115,7 @@ function renderLanding() {
       <div class="hero-bottom">
         <div>
           <span class="meta-label">${escapeText(labels.format)}</span>
-          <span class="meta-value">3 scenarios · 9 decisions · 3 practice dimensions</span>
+          <span class="meta-value">3 scenarios · up to 9 decisions · 3 practice dimensions</span>
         </div>
         <div>
           <span class="meta-label">${escapeText(labels.duration)}</span>
@@ -201,9 +213,9 @@ function choose(node, choice) {
     state.scores[dimension] += choice.effects[dimension] ?? 0;
   }
   state.choices.push({
+    scenarioId: scenario.scenario_id,
     nodeId: node.id,
     choiceId: choice.id,
-    ruleRefs: choice.rule_refs,
   });
 
   renderChoiceFeedback(choice);
@@ -276,7 +288,8 @@ function renderEnding(endingId) {
 }
 
 function normalizedScore(dimension) {
-  const maximum = totalQuestions * 2;
+  const maximum = state.choices.length * 2;
+  if (maximum === 0) return 50;
   return Math.round(Math.max(0, Math.min(100, ((state.scores[dimension] + maximum) / (maximum * 2)) * 100)));
 }
 
@@ -324,7 +337,7 @@ function renderReport(ending) {
   const next = sorted.at(-1);
   app.innerHTML = `
     <section class="game-card report-card">
-      <p class="eyebrow">${escapeText(labels.completed)}</p>
+      <p class="eyebrow">${state.choices.length} ${escapeText(labels.completed)} · ${scenarios.length} scenarios</p>
       <h1>${escapeText(labels.report)}</h1>
       <p class="report-intro">${escapeText(labels.reportIntro)}</p>
       <div class="radar-wrap">${renderRadarChart(scores)}</div>
@@ -348,6 +361,11 @@ function renderReport(ending) {
           <p>${escapeText(dimensionTips[next])}</p>
         </article>
       </div>
+      <section class="feedback-panel ai-coach" id="ai-coach" aria-live="polite">
+        <h2 class="feedback-title">${escapeText(labels.aiTitle)}</h2>
+        <p class="feedback-copy">${escapeText(labels.aiPrivacy)}</p>
+        <button class="primary-button" type="button" data-action="start-ai">${escapeText(labels.aiStart)}</button>
+      </section>
       <section class="feedback-panel">
         <h2 class="feedback-title">Final reflection</h2>
         <p class="feedback-copy">${escapeText(ending.reflection.prompt)}</p>
@@ -386,6 +404,112 @@ function renderReport(ending) {
     endingById = new Map(scenario.endings.map((item) => [item.id, item]));
     renderNode(scenario.start);
   });
+  const aiCoach = app.querySelector("#ai-coach");
+  aiCoach.querySelector('[data-action="start-ai"]').addEventListener("click", () => {
+    requestAiFeedback(aiCoach);
+  });
+}
+
+function renderAiSetup(container) {
+  container.innerHTML = `
+    <h2 class="feedback-title">${escapeText(labels.aiTitle)}</h2>
+    <p class="feedback-copy">${escapeText(labels.aiPrivacy)}</p>
+    <p class="feedback-copy">${escapeText(labels.aiUnavailable)}</p>
+  `;
+}
+
+function renderAiError(container, message) {
+  container.innerHTML = `
+    <h2 class="feedback-title">${escapeText(labels.aiTitle)}</h2>
+    <p class="feedback-copy">${escapeText(labels.aiError)} ${escapeText(message)}</p>
+    <button class="secondary-button" type="button" data-action="retry-ai">${escapeText(labels.retryAi)}</button>
+  `;
+  container.querySelector('[data-action="retry-ai"]').addEventListener("click", () => {
+    requestAiFeedback(container);
+  });
+}
+
+function renderAiQuestion(container, result) {
+  const followUp = result.followUp;
+  if (
+    !Array.isArray(followUp.choices)
+    || followUp.choices.length !== 3
+    || !Array.isArray(followUp.ruleRefs)
+  ) {
+    throw new Error("The AI response is missing the follow-up question.");
+  }
+
+  container.innerHTML = `
+    <p class="eyebrow">AI · ${escapeText(labels[result.focusDimension] || labels.judgment)}</p>
+    <h2 class="feedback-title">${escapeText(labels.aiTitle)}</h2>
+    <p class="feedback-copy">${escapeText(result.feedback)}</p>
+    ${renderRules(followUp.ruleRefs)}
+    <div class="ai-question">
+      <h3>${escapeText(followUp.title)}</h3>
+      <p class="feedback-copy">${escapeText(followUp.situation)}</p>
+      <p class="ai-prompt">${escapeText(followUp.question)}</p>
+      <p class="score-note">${escapeText(labels.aiQuestionNote)}</p>
+      <div class="reflection-list">
+        ${followUp.choices.map((choice) => `
+          <button class="reflection-button ai-choice" type="button" data-ai-choice="${escapeText(choice.id)}">
+            ${escapeText(choice.id)}. ${escapeText(choice.text)}
+          </button>
+        `).join("")}
+      </div>
+      <div class="ai-answer" aria-live="polite"></div>
+    </div>
+  `;
+
+  container.querySelectorAll("[data-ai-choice]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const choice = followUp.choices.find((item) => item.id === button.dataset.aiChoice);
+      container.querySelectorAll("[data-ai-choice]").forEach((item) => {
+        item.setAttribute("aria-pressed", String(item === button));
+      });
+      const answer = container.querySelector(".ai-answer");
+      answer.className = `ai-answer feedback-panel${choice.aligned ? "" : " is-misaligned"}`;
+      answer.innerHTML = `
+        <h3 class="feedback-title">${escapeText(choice.aligned ? labels.aiAligned : labels.aiMisaligned)}</h3>
+        <p class="feedback-copy">${escapeText(choice.feedback)}</p>
+        ${renderRules(choice.ruleRefs)}
+      `;
+    });
+  });
+}
+
+async function requestAiFeedback(container) {
+  const endpoint = window.WORKPLACE_AI_ENDPOINT;
+  if (!endpoint) {
+    renderAiSetup(container);
+    return;
+  }
+
+  container.innerHTML = `
+    <h2 class="feedback-title">${escapeText(labels.aiTitle)}</h2>
+    <p class="feedback-copy">${escapeText(labels.aiLoading)}</p>
+  `;
+
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        answers: state.choices.map(({ scenarioId, nodeId, choiceId }) => ({
+          scenarioId,
+          nodeId,
+          choiceId,
+        })),
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.error || `Request failed (${response.status}).`);
+    }
+    renderAiQuestion(container, result);
+  } catch (error) {
+    console.error("AI learning coach request failed:", error);
+    renderAiError(container, error.message || labels.aiError);
+  }
 }
 
 function renderError(message) {

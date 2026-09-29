@@ -1,0 +1,1 @@
+window.WORKPLACE_AI_ENDPOINT = "";
