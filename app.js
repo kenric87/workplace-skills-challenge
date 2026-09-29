@@ -34,10 +34,7 @@ const labels = {
   format: "Challenge format",
   duration: "Estimated time",
   durationValue: "About 6–8 minutes · 10 decisions",
-  journey: "Your challenge",
-  ending: "Scenario complete",
   notFound: "Scenario data not found",
-  finishScenario: "View scenario wrap-up",
   report: "Your practice profile",
   reportIntro: "Your radar chart summarizes your choices across all four scenarios. Your feedback is predefined, so the challenge works without an AI service.",
   scoreScale: "Each axis is a scenario-specific practice indicator from 0 to 100. 50 is the neutral midpoint.",
@@ -45,7 +42,7 @@ const labels = {
   growthArea: "An area to practice next",
   chartLabel: "Radar chart showing practice indicators for compliance, judgment, and communication",
   completed: "Decisions completed",
-  nextScenario: "Continue to next scenario",
+  nextScenario: "Preview next scenario",
   resultButton: "View your overall profile",
   tapToContinue: "Tap anywhere on this card to continue",
   startScenario: "Start scenario",
@@ -323,8 +320,12 @@ async function renderChoiceFeedback(node, choice) {
   const character = sceneCharacter(node);
   const target = choice.next
     ? () => renderNode(choice.next)
-    : () => renderEnding(choice.ending_id);
-  const nextStep = choice.next ? labels.next : labels.finishScenario;
+    : () => completeScenario(choice.ending_id);
+  const nextStep = choice.next
+    ? labels.next
+    : scenarioIndex < scenarios.length - 1
+      ? labels.nextScenario
+      : labels.resultButton;
 
   const feedback = document.createElement("section");
   feedback.className = "response-panel";
@@ -382,48 +383,23 @@ async function renderChoiceFeedback(node, choice) {
   });
 }
 
-function renderEnding(endingId) {
+function completeScenario(endingId) {
   const ending = endingById.get(endingId);
   if (!ending) {
     renderError(labels.notFound);
     return;
   }
 
-  state.endingId = endingId;
-  const hasNextScenario = scenarioIndex < scenarios.length - 1;
-  app.innerHTML = `
-    <section class="game-card">
-      <div class="game-topline">
-        <span class="step-label">${escapeText(labels.ending)}</span>
-        <span class="step-label">${escapeText(scenario.title)}</span>
-      </div>
-      <p class="eyebrow">${escapeText(labels.journey)}</p>
-      <h1>${escapeText(ending.title)}</h1>
-      <p class="scenario-copy">${escapeText(ending.summary)}</p>
-      <section class="feedback-panel${endingId.endsWith("good") || endingId.endsWith("routed") || endingId === "E-aligned" ? "" : " is-misaligned"}">
-        <h2 class="feedback-title">Scenario feedback</h2>
-        <p class="feedback-copy">${escapeText(ending.feedback)}</p>
-        ${renderRules(ending.rule_refs)}
-      </section>
-      <div class="result-actions">
-        <button class="primary-button" type="button" data-action="continue">
-          ${escapeText(hasNextScenario ? labels.nextScenario : labels.resultButton)} →
-        </button>
-      </div>
-    </section>
-  `;
+  if (scenarioIndex < scenarios.length - 1) {
+    scenarioIndex += 1;
+    scenario = scenarios[scenarioIndex];
+    nodeById = new Map(scenario.nodes.map((node) => [node.id, node]));
+    endingById = new Map(scenario.endings.map((item) => [item.id, item]));
+    renderScenarioIntro();
+    return;
+  }
 
-  app.querySelector('[data-action="continue"]').addEventListener("click", () => {
-    if (hasNextScenario) {
-      scenarioIndex += 1;
-      scenario = scenarios[scenarioIndex];
-      nodeById = new Map(scenario.nodes.map((node) => [node.id, node]));
-      endingById = new Map(scenario.endings.map((item) => [item.id, item]));
-      renderScenarioIntro();
-      return;
-    }
-    renderReport(ending);
-  });
+  renderReport(ending);
 }
 
 function normalizedScore(dimension) {
