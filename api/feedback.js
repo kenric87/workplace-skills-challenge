@@ -1,6 +1,3 @@
-const fs = require("node:fs");
-const path = require("node:path");
-
 const DEFAULT_ORIGINS = [
   "https://kenric87.github.io",
   "http://localhost:8765",
@@ -11,10 +8,11 @@ const DEFAULT_ORIGINS = [
 
 const DIMENSIONS = ["compliance", "judgment", "tone"];
 const SCENARIO_FILES = [
-  "gitlab-roadmap-sharing-scenario.json",
-  "team-feedback-scenario.json",
-  "media-inquiry-scenario.json",
+  require("../gitlab-roadmap-sharing-scenario.json"),
+  require("../team-feedback-scenario.json"),
+  require("../media-inquiry-scenario.json"),
 ];
+const RULEBOOK = require("../northwind-team-conduct-guide.json");
 const rateLimit = new Map();
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_REQUESTS = 5;
@@ -34,10 +32,6 @@ function allowedOrigins() {
     .map((origin) => origin.trim())
     .filter(Boolean);
   return new Set([...DEFAULT_ORIGINS, ...configured]);
-}
-
-function loadJson(fileName) {
-  return JSON.parse(fs.readFileSync(path.join(process.cwd(), fileName), "utf8"));
 }
 
 function collectAnswers(answers, scenarios, rulebook) {
@@ -258,9 +252,7 @@ module.exports = async function handler(req, res) {
       return sendJson(res, 413, { error: "The answer history is too large." });
     }
 
-    const scenarios = SCENARIO_FILES.map(loadJson);
-    const rulebook = loadJson("northwind-team-conduct-guide.json");
-    const context = collectAnswers(body.answers, scenarios, rulebook);
+    const context = collectAnswers(body.answers, SCENARIO_FILES, RULEBOOK);
     const allowedRuleIds = new Set(context.rules.map((rule) => rule.id));
 
     const prompt = [
