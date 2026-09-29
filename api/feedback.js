@@ -278,50 +278,80 @@ module.exports = async function handler(req, res) {
       }),
     ].join("\n\n");
 
-    const apiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(process.env.GEMINI_MODEL || "gemini-3.8-flash")}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": process.env.GEMINI_API_KEY,
-        },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 1400,
-            responseMimeType: "application/json",
-            responseSchema: responseSchema(),
-          },
-        }),
-      },
-    );
+    const models = [...new Set([
+      process.env.GEMINI_MODEL || "gemini-3.8-flash",
+      "gemini-3.7-flash",
+      "gemini-3.6-flash",
+    ])];
+    let apiResponse;
+    let providerError;
+    let model;
 
-    if (!apiResponse.ok) {
+    for (let index = 0; index < models.length; index += 1) {
+      model = models[index];
+      apiResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": process.env.GEMINI_API_KEY,
+          },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.3,
+              maxOutputTokens: 1400,
+              responseMimeType: "application/json",
+              responseSchema: responseSchema(),
+            },
+          }),
+        },
+      );
+
+      if (apiResponse.ok) break;
+
       const errorBody = await apiResponse.text();
-      let providerError;
       try {
         providerError = JSON.parse(errorBody).error;
       } catch {
         providerError = undefined;
       }
+      console.error("Gemini request failed:", {
+        model,
+        httpStatus: apiResponse.status,
+        providerStatus: providerError?.status,
+        message: typeof providerError?.message === "string"
+          ? providerError.message.slice(0, 500)
+          : "No provider error details were returned.",
+      });
+      if (![404, 503].includes(apiResponse.status) || index === models.length - 1) break;
+      console.warn("Gemini model unavailable; trying fallback.", {
+        failedModel: model,
+        nextModel: models[index + 1],
+        httpStatus: apiResponse.status,
+      });
+    }
+
+    if (!apiResponse.ok) {
       const providerMessage = typeof providerError?.message === "string"
         ? providerError.message.slice(0, 500)
         : "No provider error details were returned.";
-      console.error("Gemini request failed:", {
-        httpStatus: apiResponse.status,
-        providerStatus: providerError?.status,
-        message: providerMessage,
-      });
-
       const publicMessage = apiResponse.status === 429
         ? "Gemini rate limit or quota reached (HTTP 429). Check your Google AI Studio usage and quota."
         : apiResponse.status === 403
           ? "Gemini rejected the API key or project access (HTTP 403). Check the Vercel GEMINI_API_KEY and its project permissions."
           : apiResponse.status === 400
             ? "Gemini rejected the request (HTTP 400). Check the model and structured output configuration."
-            : `The Gemini service returned an error (HTTP ${apiResponse.status}). Please try again later.`;
+            : apiResponse.status === 503
+              ? "Gemini is temporarily busy on all available models. Please try again later."
+              : `The Gemini service returned an error (HTTP ${apiResponse.status}). Please try again later.`;
+      if (apiResponse.status === 404) {
+        console.error("Gemini model not found after trying configured fallbacks.", {
+          model,
+          message: providerMessage,
+        });
+      }
       return sendJson(res, 502, { error: publicMessage });
     }
 
