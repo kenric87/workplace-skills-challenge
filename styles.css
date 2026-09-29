@@ -78,6 +78,7 @@ button {
 }
 
 .hero-card,
+.scenario-intro-card,
 .game-card,
 .loading-card,
 .error-card {
@@ -89,6 +90,85 @@ button {
 
 .hero-card {
   overflow: hidden;
+}
+
+.scenario-intro-card {
+  overflow: hidden;
+  border-radius: 24px;
+}
+
+.scenario-intro-art {
+  position: relative;
+  display: grid;
+  min-height: 340px;
+  overflow: hidden;
+  place-items: end center;
+  background:
+    radial-gradient(circle at 82% 45%, rgb(255 255 255 / 52%) 0 17%, transparent 17.2%),
+    radial-gradient(circle at 17% 76%, rgb(255 255 255 / 42%) 0 12%, transparent 12.2%),
+    linear-gradient(145deg, #edf7ff, #dcecff);
+}
+
+.intro-duration {
+  position: absolute;
+  z-index: 1;
+  top: 24px;
+  left: 26px;
+  padding: 9px 14px;
+  border: 1px solid rgb(255 255 255 / 80%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 88%);
+  color: #536b81;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.intro-character {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min(76%, 350px);
+  height: 300px;
+  place-items: end center;
+}
+
+.intro-character .character-avatar {
+  width: min(100%, 270px);
+  height: auto;
+  aspect-ratio: 1;
+  border: 0;
+  box-shadow: none;
+}
+
+.scenario-intro-content {
+  padding: clamp(24px, 6vw, 42px);
+}
+
+.intro-character-label {
+  margin: 0 0 10px;
+  color: #416bc4;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.scenario-intro-content h1 {
+  max-width: 100%;
+  font-size: clamp(27px, 6vw, 38px);
+  letter-spacing: -0.04em;
+}
+
+.intro-description {
+  margin: 16px 0 24px;
+  color: #64758b;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.intro-start-button {
+  width: 100%;
+  min-height: 58px;
+  border-radius: 999px;
+  font-size: 16px;
 }
 
 .scenario-preview {
@@ -899,8 +979,31 @@ h1 {
   }
 
   .hero-card,
+  .scenario-intro-card,
   .game-card {
     border-radius: 18px;
+  }
+
+  .scenario-intro-art {
+    min-height: 270px;
+  }
+
+  .intro-duration {
+    top: 18px;
+    left: 18px;
+  }
+
+  .intro-character {
+    width: 78%;
+    height: 245px;
+  }
+
+  .intro-character .character-avatar {
+    width: min(100%, 225px);
+  }
+
+  .scenario-intro-content {
+    padding: 25px 22px;
   }
 
   .hero-bottom {

@@ -1,6 +1,8 @@
 {
   "scenario_id": "S2",
   "title": "A Better Way to Give Feedback",
+  "preview_partner_role": "your teammate",
+  "preview_description": "A project handoff arrived late and held up another team. Practise raising the issue with Casey, understanding what caused the delay, and agreeing on a constructive next step.",
   "language": "en",
   "source_document": "GitLab Communication & Collaboration Guide (Extended Excerpt)",
   "attribution": "Fictional scenario for development and testing, based on the supplied adapted rule excerpt. It is not official GitLab training or policy.",

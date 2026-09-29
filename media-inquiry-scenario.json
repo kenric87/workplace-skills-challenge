@@ -1,6 +1,8 @@
 {
   "scenario_id": "S3",
   "title": "A Reporter Gets in Touch",
+  "preview_partner_role": "a reporter",
+  "preview_description": "A reporter asks about an announcement that has not been made yet. Decide how to route the questions to the right communications team without commenting yourself.",
   "language": "en",
   "source_document": "GitLab Communication & Collaboration Guide (Extended Excerpt)",
   "attribution": "Fictional scenario for development and testing, based on the supplied adapted rule excerpt. It is not official GitLab training or policy.",

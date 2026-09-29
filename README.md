@@ -1,6 +1,6 @@
 # Workplace Lab prototype
 
-A mobile-friendly static website with four workplace scenarios and 10 decisions. Each choice plays a predefined character reply, then shows the scenario explanation and related rules. The final report includes a radar chart for compliance, judgment, and communication practice indicators.
+A mobile-friendly static website with four workplace scenarios and 10 decisions. Each scenario begins with a character-led preview; each choice then plays a predefined reply before showing the scenario explanation and related rules. The final report includes a radar chart for compliance, judgment, and communication practice indicators.
 
 ## Run locally
 

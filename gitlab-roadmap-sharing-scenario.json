@@ -1,6 +1,8 @@
 {
   "scenario_id": "S1",
   "title": "The Roadmap in the Public Channel",
+  "preview_partner_role": "a neighbouring colleague",
+  "preview_description": "A colleague asks you to post an unreleased product roadmap where everyone can see it. Decide how to get useful feedback while protecting sensitive plans and recording the decision safely.",
   "language": "en",
   "source_document": "GitLab Communication & Collaboration Guide (Extended Excerpt)",
   "attribution": "Scenario written for development and testing using the supplied adapted rule excerpt. It is not official GitLab training or policy. Confirm the current source wording and exact Creative Commons license variant before public use.",

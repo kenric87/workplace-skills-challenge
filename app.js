@@ -47,6 +47,8 @@ const labels = {
   completed: "Decisions completed",
   nextScenario: "Continue to next scenario",
   resultButton: "View your overall profile",
+  startScenario: "Start scenario",
+  withCharacter: "With",
   questionOf: "of",
   responseThinking: "is considering your response",
   responseReady: "A response from",
@@ -136,7 +138,7 @@ function renderLanding() {
     scenario = scenarios[scenarioIndex];
     nodeById = new Map(scenario.nodes.map((node) => [node.id, node]));
     endingById = new Map(scenario.endings.map((ending) => [ending.id, ending]));
-    renderNode(scenario.start);
+    renderScenarioIntro();
   });
 }
 
@@ -163,6 +165,40 @@ function sceneCharacter(node) {
   return scenario.characters.find((character) => character.id === node.speaker && character.id !== "C1")
     || scenario.characters.find((character) => character.id !== "C1")
     || scenario.characters.find((character) => character.id === node.speaker);
+}
+
+function renderScenarioIntro() {
+  const firstNode = nodeById.get(scenario.start);
+  if (!firstNode) {
+    renderError(labels.notFound);
+    return;
+  }
+  const character = sceneCharacter(firstNode);
+  const partner = scenario.preview_partner_role || "your colleague";
+  const duration = `~${scenario.nodes.length} min`;
+  app.innerHTML = `
+    <section class="scenario-intro-card">
+      <div class="scenario-intro-art">
+        <span class="intro-duration">${escapeText(duration)}</span>
+        <span class="intro-orbit intro-orbit-left" aria-hidden="true"></span>
+        <span class="intro-orbit intro-orbit-right" aria-hidden="true"></span>
+        <div class="intro-character">
+          ${renderCharacterAvatar(character)}
+        </div>
+      </div>
+      <div class="scenario-intro-content">
+        <p class="intro-character-label">${escapeText(`${labels.withCharacter} ${character?.name || "your colleague"}, ${partner}`)}</p>
+        <h1>${escapeText(scenario.title)}</h1>
+        <p class="intro-description">${escapeText(scenario.preview_description)}</p>
+        <button class="primary-button intro-start-button" type="button" data-action="start-scenario">
+          ${escapeText(labels.startScenario)} →
+        </button>
+      </div>
+    </section>
+  `;
+  app.querySelector('[data-action="start-scenario"]').addEventListener("click", () => {
+    renderNode(scenario.start);
+  });
 }
 
 function renderCharacterAvatar(character, compact = false, running = false) {
@@ -372,7 +408,7 @@ function renderEnding(endingId) {
       scenario = scenarios[scenarioIndex];
       nodeById = new Map(scenario.nodes.map((node) => [node.id, node]));
       endingById = new Map(scenario.endings.map((item) => [item.id, item]));
-      renderNode(scenario.start);
+      renderScenarioIntro();
       return;
     }
     renderReport(ending);
@@ -489,7 +525,7 @@ function renderReport(ending) {
     scenario = scenarios[scenarioIndex];
     nodeById = new Map(scenario.nodes.map((node) => [node.id, node]));
     endingById = new Map(scenario.endings.map((item) => [item.id, item]));
-    renderNode(scenario.start);
+    renderScenarioIntro();
   });
 }
 
@@ -506,6 +542,9 @@ function renderError(message) {
 function validateScenario(data, rules) {
   if (!data || !Array.isArray(data.nodes) || !Array.isArray(data.endings)) {
     throw new Error("Scenario data is missing nodes or endings.");
+  }
+  if (typeof data.preview_description !== "string" || !data.preview_description.trim()) {
+    throw new Error(`Scenario ${data.scenario_id} is missing its preview description.`);
   }
   const ids = new Set(rules.rules.map((rule) => rule.id));
   const referencedIds = [
