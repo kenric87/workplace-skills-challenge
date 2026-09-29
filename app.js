@@ -47,6 +47,7 @@ const labels = {
   completed: "Decisions completed",
   nextScenario: "Continue to next scenario",
   resultButton: "View your overall profile",
+  tapToContinue: "Tap anywhere on this card to continue",
   startScenario: "Start scenario",
   withCharacter: "With",
   questionOf: "of",
@@ -323,7 +324,7 @@ async function renderChoiceFeedback(node, choice) {
   const target = choice.next
     ? () => renderNode(choice.next)
     : () => renderEnding(choice.ending_id);
-  const buttonText = choice.next ? labels.next : labels.finishScenario;
+  const nextStep = choice.next ? labels.next : labels.finishScenario;
 
   const feedback = document.createElement("section");
   feedback.className = "response-panel";
@@ -348,6 +349,9 @@ async function renderChoiceFeedback(node, choice) {
   await new Promise((resolve) => window.setTimeout(resolve, thinkingDuration));
   if (!feedback.isConnected) return;
   feedback.className = `feedback-panel conversation-feedback${aligned ? "" : " is-misaligned"}`;
+  feedback.setAttribute("role", "button");
+  feedback.setAttribute("tabindex", "0");
+  feedback.setAttribute("aria-label", `${labels.tapToContinue}: ${nextStep}`);
   feedback.innerHTML = `
     <div class="response-turn">
       ${renderCharacterAvatar(character, true)}
@@ -364,11 +368,18 @@ async function renderChoiceFeedback(node, choice) {
       </div>
     </div>
     ${renderRules(choice.rule_refs)}
-    <div class="feedback-actions">
-      <button class="primary-button" type="button" data-action="continue">${escapeText(buttonText)} →</button>
+    <div class="feedback-advance-hint" aria-hidden="true">
+      <span>${escapeText(labels.tapToContinue)}</span>
+      <span class="feedback-advance-action">${escapeText(nextStep)} →</span>
     </div>
   `;
-  feedback.querySelector('[data-action="continue"]').addEventListener("click", target);
+  feedback.addEventListener("click", target);
+  feedback.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      target();
+    }
+  });
 }
 
 function renderEnding(endingId) {
