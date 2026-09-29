@@ -320,9 +320,13 @@ async function renderChoiceFeedback(node, choice) {
         <p>${escapeText(choice.reply || choice.consequence)}</p>
       </div>
     </div>
-    <h2 class="feedback-title">${escapeText(aligned ? labels.aligned : labels.reconsider)}</h2>
-    <h3 class="explanation-title">${escapeText(labels.explanation)}</h3>
-    <p class="feedback-copy">${escapeText(choice.consequence)}</p>
+    <div class="feedback-summary">
+      <h2 class="feedback-title">${escapeText(aligned ? labels.aligned : labels.reconsider)}</h2>
+      <div class="explanation-block">
+        <h3 class="explanation-title">${escapeText(labels.explanation)}</h3>
+        <p class="feedback-copy">${escapeText(choice.consequence)}</p>
+      </div>
+    </div>
     ${renderRules(choice.rule_refs)}
     <div class="feedback-actions">
       <button class="primary-button" type="button" data-action="continue">${escapeText(buttonText)} →</button>
