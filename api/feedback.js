@@ -298,8 +298,30 @@ module.exports = async function handler(req, res) {
     );
 
     if (!apiResponse.ok) {
-      console.error("Gemini request failed with status", apiResponse.status);
-      return sendJson(res, 502, { error: "The AI service could not generate feedback. Please try again shortly." });
+      const errorBody = await apiResponse.text();
+      let providerError;
+      try {
+        providerError = JSON.parse(errorBody).error;
+      } catch {
+        providerError = undefined;
+      }
+      const providerMessage = typeof providerError?.message === "string"
+        ? providerError.message.slice(0, 500)
+        : "No provider error details were returned.";
+      console.error("Gemini request failed:", {
+        httpStatus: apiResponse.status,
+        providerStatus: providerError?.status,
+        message: providerMessage,
+      });
+
+      const publicMessage = apiResponse.status === 429
+        ? "Gemini rate limit or quota reached (HTTP 429). Check your Google AI Studio usage and quota."
+        : apiResponse.status === 403
+          ? "Gemini rejected the API key or project access (HTTP 403). Check the Vercel GEMINI_API_KEY and its project permissions."
+          : apiResponse.status === 400
+            ? "Gemini rejected the request (HTTP 400). Check the model and structured output configuration."
+            : `The Gemini service returned an error (HTTP ${apiResponse.status}). Please try again later.`;
+      return sendJson(res, 502, { error: publicMessage });
     }
 
     const apiData = await apiResponse.json();
