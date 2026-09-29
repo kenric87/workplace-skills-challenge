@@ -25,6 +25,9 @@ const labels = {
   reflectionTry: "Review the scenario feedback and choose the option that follows the relevant rule and process.",
   noReflection: "Choose the statement that best reflects what you learned.",
   scoreNote: "These practice indicators are based only on your choices in these scenarios. They are not validated measures of ability or a judgment of you as a person.",
+  currentScore: "Current score",
+  scoreRule: "Correct choice +3 · Other choice −3",
+  finalScore: "Final score",
   compliance: "Compliance",
   judgment: "Judgment",
   tone: "Communication",
@@ -37,9 +40,7 @@ const labels = {
   notFound: "Scenario data not found",
   report: "Your practice profile",
   reportIntro: "Your radar chart summarizes your choices across all four scenarios. Your feedback is predefined, so the challenge works without an AI service.",
-  scoreScale: "Each axis is a scenario-specific practice indicator from 0 to 100. 50 is the neutral midpoint.",
-  strongest: "Relative strength in this set",
-  growthArea: "An area to practice next",
+  scoreScale: "The radar chart summarizes your choices across the three practice dimensions.",
   chartLabel: "Radar chart showing practice indicators for compliance, judgment, and communication",
   completed: "Decisions completed",
   nextScenario: "Preview next scenario",
@@ -64,11 +65,8 @@ let state;
 let totalQuestions = 0;
 
 const dimensions = ["compliance", "judgment", "tone"];
-const dimensionTips = {
-  compliance: "Practice checking the exact rule and following the required process.",
-  judgment: "Practice checking the context, audience, and likely consequences before acting.",
-  tone: "Practice communicating clearly, respectfully, and constructively.",
-};
+const startingScore = 70;
+const scoreChangePerAnswer = 3;
 
 function escapeText(value) {
   return String(value).replace(/[&<>"']/g, (char) => ({
@@ -142,6 +140,7 @@ function renderLanding() {
 
 function newGame() {
   return {
+    score: startingScore,
     scores: { compliance: 0, judgment: 0, tone: 0 },
     choices: [],
     reflections: [],
@@ -266,6 +265,16 @@ function renderNode(nodeId) {
   const character = sceneCharacter(node);
   app.innerHTML = `
     <section class="game-card">
+      <div class="score-meter">
+        <div class="score-meter-heading">
+          <span>${escapeText(labels.currentScore)}</span>
+          <strong><span data-current-score>${state.score}</span><small> / 100</small></strong>
+        </div>
+        <div class="score-meter-track" role="meter" aria-label="${escapeText(labels.currentScore)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${state.score}">
+          <div class="score-meter-fill" data-score-fill style="width:${state.score}%"></div>
+        </div>
+        <p class="score-rule">${escapeText(labels.scoreRule)}</p>
+      </div>
       <div class="game-topline">
         <div>
           <span class="step-label">${escapeText(scenario.title)}</span>
@@ -303,6 +312,8 @@ function renderNode(nodeId) {
 }
 
 function choose(node, choice) {
+  const scoreDelta = choice.is_aligned ? scoreChangePerAnswer : -scoreChangePerAnswer;
+  state.score = Math.max(0, Math.min(100, state.score + scoreDelta));
   for (const dimension of Object.keys(state.scores)) {
     state.scores[dimension] += choice.effects[dimension] ?? 0;
   }
@@ -312,7 +323,18 @@ function choose(node, choice) {
     choiceId: choice.id,
   });
 
+  updateScoreMeter();
   renderChoiceFeedback(node, choice);
+}
+
+function updateScoreMeter() {
+  const scoreValue = app.querySelector("[data-current-score]");
+  const scoreFill = app.querySelector("[data-score-fill]");
+  const scoreMeter = app.querySelector(".score-meter-track");
+  if (!scoreValue || !scoreFill || !scoreMeter) return;
+  scoreValue.textContent = String(state.score);
+  scoreFill.style.width = `${state.score}%`;
+  scoreMeter.setAttribute("aria-valuenow", String(state.score));
 }
 
 async function renderChoiceFeedback(node, choice) {
@@ -408,7 +430,7 @@ function normalizedScore(dimension) {
   return Math.round(Math.max(0, Math.min(100, ((state.scores[dimension] + maximum) / (maximum * 2)) * 100)));
 }
 
-function radarPoints(values, radius, centerX = 190, centerY = 155) {
+function radarPoints(values, radius, centerX = 220, centerY = 165) {
   const angles = [-90, 30, 150];
   return angles.map((angle, index) => {
     const radians = (angle * Math.PI) / 180;
@@ -420,21 +442,21 @@ function radarPoints(values, radius, centerX = 190, centerY = 155) {
 function renderRadarChart(scores) {
   const values = dimensions.map((dimension) => scores[dimension]);
   const labelsAt = [
-    { x: 190, y: 22, anchor: "middle", text: labels.compliance },
-    { x: 326, y: 235, anchor: "start", text: labels.judgment },
-    { x: 54, y: 235, anchor: "end", text: labels.tone },
+    { x: 220, y: 27, anchor: "middle", text: labels.compliance },
+    { x: 335, y: 244, anchor: "start", text: labels.judgment },
+    { x: 105, y: 244, anchor: "end", text: labels.tone },
   ];
   return `
-    <svg class="radar-chart" viewBox="0 0 380 270" role="img" aria-label="${escapeText(labels.chartLabel)}">
+    <svg class="radar-chart" viewBox="0 0 440 285" role="img" aria-label="${escapeText(labels.chartLabel)}">
       <title>${escapeText(labels.chartLabel)}</title>
       ${[20, 40, 60, 80, 100].map((value) => `
-        <polygon class="radar-grid" points="${radarPoints([value, value, value], 105)}"></polygon>
+        <polygon class="radar-grid" points="${radarPoints([value, value, value], 100)}"></polygon>
       `).join("")}
       ${[0, 1, 2].map((index) => `
-        <line class="radar-axis" x1="190" y1="155" x2="${[190, 281, 99][index]}" y2="${[50, 207.5, 207.5][index]}"></line>
+        <line class="radar-axis" x1="220" y1="165" x2="${[220, 306.6, 133.4][index]}" y2="${[65, 215, 215][index]}"></line>
       `).join("")}
-      <polygon class="radar-area" points="${radarPoints(values, 105)}"></polygon>
-      ${radarPoints(values, 105).split(" ").map((point) => {
+      <polygon class="radar-area" points="${radarPoints(values, 100)}"></polygon>
+      ${radarPoints(values, 100).split(" ").map((point) => {
         const [cx, cy] = point.split(",");
         return `<circle class="radar-point" cx="${cx}" cy="${cy}" r="4"></circle>`;
       }).join("")}
@@ -447,35 +469,22 @@ function renderRadarChart(scores) {
 
 function renderReport(ending) {
   const scores = Object.fromEntries(dimensions.map((dimension) => [dimension, normalizedScore(dimension)]));
-  const sorted = [...dimensions].sort((left, right) => scores[right] - scores[left]);
-  const best = sorted[0];
-  const next = sorted.at(-1);
   app.innerHTML = `
     <section class="game-card report-card">
       <p class="eyebrow">${state.choices.length} ${escapeText(labels.completed)} · ${scenarios.length} scenarios</p>
       <h1>${escapeText(labels.report)}</h1>
       <p class="report-intro">${escapeText(labels.reportIntro)}</p>
+      <section class="final-score-card" aria-label="${escapeText(labels.finalScore)}">
+        <div class="final-score-heading">
+          <span>${escapeText(labels.finalScore)}</span>
+          <strong>${state.score}<small> / 100</small></strong>
+        </div>
+        <div class="score-meter-track" role="meter" aria-label="${escapeText(labels.finalScore)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${state.score}">
+          <div class="score-meter-fill" style="width:${state.score}%"></div>
+        </div>
+      </section>
       <div class="radar-wrap">${renderRadarChart(scores)}</div>
-      <div class="score-grid">
-        ${dimensions.map((dimension) => `
-          <div class="score-card">
-            <span class="score-name">${escapeText(labels[dimension])}</span>
-            <span class="score-value">${scores[dimension]}<small>/100</small></span>
-          </div>
-        `).join("")}
-      </div>
       <p class="score-note">${escapeText(labels.scoreScale)} ${escapeText(labels.scoreNote)}</p>
-      <div class="insight-grid">
-        <article class="insight-card">
-          <span class="meta-label">${escapeText(labels.strongest)}</span>
-          <strong>${escapeText(labels[best])} · ${scores[best]}/100</strong>
-        </article>
-        <article class="insight-card">
-          <span class="meta-label">${escapeText(labels.growthArea)}</span>
-          <strong>${escapeText(labels[next])} · ${scores[next]}/100</strong>
-          <p>${escapeText(dimensionTips[next])}</p>
-        </article>
-      </div>
       <section class="feedback-panel">
         <h2 class="feedback-title">Final reflection</h2>
         <p class="feedback-copy">${escapeText(ending.reflection.prompt)}</p>
