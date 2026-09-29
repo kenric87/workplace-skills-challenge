@@ -165,7 +165,7 @@ function sceneCharacter(node) {
     || scenario.characters.find((character) => character.id === node.speaker);
 }
 
-function renderCharacterAvatar(character, compact = false) {
+function renderCharacterAvatar(character, compact = false, running = false) {
   if (!character) return "";
   const theme = [
     { bg: "#dcebe2", hair: "#374b40", skin: "#c98d6c", shirt: "#317457" },
@@ -174,8 +174,36 @@ function renderCharacterAvatar(character, compact = false) {
     { bg: "#dce9f0", hair: "#394955", skin: "#d7a17d", shirt: "#3e718e" },
   ][[...character.name].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 4];
   const label = `${character.name}, ${character.role}`;
-  return `
-    <span class="character-avatar${compact ? " is-compact" : ""}" role="img" aria-label="${escapeText(label)}" style="--avatar-bg:${theme.bg};--avatar-hair:${theme.hair};--avatar-skin:${theme.skin};--avatar-shirt:${theme.shirt}">
+  const avatar = running
+    ? `
+      <svg class="running-figure" viewBox="0 0 96 96" aria-hidden="true">
+        <circle cx="48" cy="48" r="48" fill="var(--avatar-bg)"></circle>
+        <g class="runner-body">
+          <path d="M51 34 42 52l16 7 10-19-10-7z" fill="var(--avatar-shirt)"></path>
+          <g class="runner-limb runner-leg-back">
+            <path d="m48 55-12 15-13 4" fill="none" stroke="var(--avatar-shirt)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path d="m23 74-8 2" fill="none" stroke="var(--avatar-hair)" stroke-width="6" stroke-linecap="round"></path>
+          </g>
+          <g class="runner-limb runner-leg-front">
+            <path d="m54 56 14 10-1 13" fill="none" stroke="var(--avatar-shirt)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path d="m67 79-8 3" fill="none" stroke="var(--avatar-hair)" stroke-width="6" stroke-linecap="round"></path>
+          </g>
+          <g class="runner-limb runner-arm-back">
+            <path d="m47 39-13 10 7 9" fill="none" stroke="var(--avatar-shirt)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path d="m41 58 4 3" fill="none" stroke="var(--avatar-skin)" stroke-width="6" stroke-linecap="round"></path>
+          </g>
+          <g class="runner-limb runner-arm-front">
+            <path d="m59 39 14-9 8 6" fill="none" stroke="var(--avatar-shirt)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path d="m81 36 4 4" fill="none" stroke="var(--avatar-skin)" stroke-width="6" stroke-linecap="round"></path>
+          </g>
+          <path d="M46 23c0-10 5-16 13-16 9 0 14 6 13 17l-2 10-18-2z" fill="var(--avatar-hair)"></path>
+          <circle cx="57" cy="24" r="10" fill="var(--avatar-skin)"></circle>
+          <path d="M47 23c0-10 5-16 13-16 9 0 14 6 13 17-6-2-10-6-12-11-3 5-8 9-14 10z" fill="var(--avatar-hair)"></path>
+          <path d="m64 25 4 1" stroke="var(--avatar-hair)" stroke-width="2" stroke-linecap="round"></path>
+        </g>
+      </svg>
+    `
+    : `
       <svg viewBox="0 0 96 96" aria-hidden="true">
         <circle cx="48" cy="48" r="48" fill="var(--avatar-bg)"></circle>
         <path d="M11 96c2-20 15-31 37-31s35 11 37 31" fill="var(--avatar-shirt)"></path>
@@ -185,6 +213,10 @@ function renderCharacterAvatar(character, compact = false) {
         <path d="M35 47h5m16 0h5" stroke="var(--avatar-hair)" stroke-width="3" stroke-linecap="round"></path>
         <path d="M42 62c4 3 8 3 12 0" fill="none" stroke="var(--avatar-hair)" stroke-width="2" stroke-linecap="round"></path>
       </svg>
+    `;
+  return `
+    <span class="character-avatar${compact ? " is-compact" : ""}${running ? " is-running" : ""}" role="img" aria-label="${escapeText(label)}" style="--avatar-bg:${theme.bg};--avatar-hair:${theme.hair};--avatar-skin:${theme.skin};--avatar-shirt:${theme.shirt}">
+      ${avatar}
     </span>
   `;
 }
@@ -266,7 +298,7 @@ async function renderChoiceFeedback(node, choice) {
       <p>${escapeText(choice.text)}</p>
     </div>
     <div class="thinking-message" role="status">
-      ${renderCharacterAvatar(character, true)}
+      ${renderCharacterAvatar(character, true, true)}
       <div class="thinking-copy">
         <strong>${escapeText(character?.name || labels.outcome)} ${escapeText(labels.responseThinking)}</strong>
         <span class="thinking-dots" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -276,7 +308,8 @@ async function renderChoiceFeedback(node, choice) {
   app.querySelector(".choice-list").replaceWith(feedback);
   app.querySelector(".choice-heading").remove();
 
-  await new Promise((resolve) => window.setTimeout(resolve, 700));
+  const thinkingDuration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1250;
+  await new Promise((resolve) => window.setTimeout(resolve, thinkingDuration));
   if (!feedback.isConnected) return;
   feedback.className = `feedback-panel conversation-feedback${aligned ? "" : " is-misaligned"}`;
   feedback.innerHTML = `

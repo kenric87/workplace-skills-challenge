@@ -263,6 +263,42 @@ h1 {
   height: 100%;
 }
 
+.character-avatar.is-running {
+  overflow: hidden;
+  border-color: rgb(36 107 80 / 15%);
+  box-shadow: 0 3px 8px rgb(29 54 39 / 12%);
+}
+
+.running-figure .runner-body {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: runner-bounce 280ms ease-in-out infinite alternate;
+}
+
+.running-figure .runner-limb {
+  transform-box: view-box;
+}
+
+.running-figure .runner-leg-back {
+  transform-origin: 48px 55px;
+  animation: runner-stride 360ms ease-in-out infinite alternate;
+}
+
+.running-figure .runner-leg-front {
+  transform-origin: 54px 56px;
+  animation: runner-stride 360ms ease-in-out infinite alternate-reverse;
+}
+
+.running-figure .runner-arm-back {
+  transform-origin: 47px 39px;
+  animation: runner-stride 360ms ease-in-out infinite alternate-reverse;
+}
+
+.running-figure .runner-arm-front {
+  transform-origin: 59px 39px;
+  animation: runner-stride 360ms ease-in-out infinite alternate;
+}
+
 .character-avatar.is-compact {
   width: 42px;
   height: 42px;
@@ -740,6 +776,26 @@ h1 {
   to {
     opacity: 1;
     transform: translateY(-3px);
+  }
+}
+
+@keyframes runner-bounce {
+  from {
+    transform: translateY(2px) rotate(-3deg);
+  }
+
+  to {
+    transform: translateY(-2px) rotate(3deg);
+  }
+}
+
+@keyframes runner-stride {
+  from {
+    transform: rotate(-32deg);
+  }
+
+  to {
+    transform: rotate(32deg);
   }
 }
 
