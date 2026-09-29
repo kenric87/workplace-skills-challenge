@@ -287,50 +287,79 @@ module.exports = async function handler(req, res) {
     let providerError;
     let model;
 
-    for (let index = 0; index < models.length; index += 1) {
+    let consecutiveUnavailableResponses = 0;
+    modelLoop: for (let index = 0; index < models.length; index += 1) {
       model = models[index];
-      apiResponse = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": process.env.GEMINI_API_KEY,
-          },
-          body: JSON.stringify({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.3,
-              maxOutputTokens: 1400,
-              responseMimeType: "application/json",
-              responseSchema: responseSchema(),
+      const maxAttempts = index === 0 ? 3 : 1;
+
+      for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+        if (consecutiveUnavailableResponses > 0) {
+          const backoffMs = Math.min(
+            1000 * (2 ** (consecutiveUnavailableResponses - 1)),
+            4000,
+          );
+          const delayMs = backoffMs + Math.floor(Math.random() * 251);
+          console.warn("Waiting before retrying Gemini after a temporary outage.", {
+            model,
+            retry: attempt + 1,
+            delayMs,
+          });
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
+
+        apiResponse = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": process.env.GEMINI_API_KEY,
             },
-          }),
-        },
-      );
+            body: JSON.stringify({
+              contents: [{ role: "user", parts: [{ text: prompt }] }],
+              generationConfig: {
+                temperature: 0.3,
+                maxOutputTokens: 1400,
+                responseMimeType: "application/json",
+                responseSchema: responseSchema(),
+              },
+            }),
+          },
+        );
 
-      if (apiResponse.ok) break;
+        if (apiResponse.ok) {
+          consecutiveUnavailableResponses = 0;
+          break modelLoop;
+        }
 
-      const errorBody = await apiResponse.text();
-      try {
-        providerError = JSON.parse(errorBody).error;
-      } catch {
-        providerError = undefined;
+        const errorBody = await apiResponse.text();
+        try {
+          providerError = JSON.parse(errorBody).error;
+        } catch {
+          providerError = undefined;
+        }
+        console.error("Gemini request failed:", {
+          model,
+          httpStatus: apiResponse.status,
+          providerStatus: providerError?.status,
+          message: typeof providerError?.message === "string"
+            ? providerError.message.slice(0, 500)
+            : "No provider error details were returned.",
+        });
+
+        if (apiResponse.status === 503) {
+          consecutiveUnavailableResponses += 1;
+          continue;
+        }
+        if (apiResponse.status === 404 && index < models.length - 1) {
+          console.warn("Gemini model not found; trying fallback.", {
+            failedModel: model,
+            nextModel: models[index + 1],
+          });
+          break;
+        }
+        break modelLoop;
       }
-      console.error("Gemini request failed:", {
-        model,
-        httpStatus: apiResponse.status,
-        providerStatus: providerError?.status,
-        message: typeof providerError?.message === "string"
-          ? providerError.message.slice(0, 500)
-          : "No provider error details were returned.",
-      });
-      if (![404, 503].includes(apiResponse.status) || index === models.length - 1) break;
-      console.warn("Gemini model unavailable; trying fallback.", {
-        failedModel: model,
-        nextModel: models[index + 1],
-        httpStatus: apiResponse.status,
-      });
     }
 
     if (!apiResponse.ok) {
@@ -344,7 +373,7 @@ module.exports = async function handler(req, res) {
           : apiResponse.status === 400
             ? "Gemini rejected the request (HTTP 400). Check the model and structured output configuration."
             : apiResponse.status === 503
-              ? "Gemini is temporarily busy on all available models. Please try again later."
+              ? "Gemini is temporarily unavailable (HTTP 503) on the available models. A 503 usually indicates provider capacity, not an invalid API key. Check Google AI Studio model availability and try again later."
               : `The Gemini service returned an error (HTTP ${apiResponse.status}). Please try again later.`;
       if (apiResponse.status === 404) {
         console.error("Gemini model not found after trying configured fallbacks.", {
