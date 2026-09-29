@@ -44,6 +44,7 @@ function collectAnswers(answers, scenarios, rulebook) {
   const summaries = [];
   const totals = Object.fromEntries(DIMENSIONS.map((dimension) => [dimension, 0]));
   const referencedRuleIds = new Set();
+  const responseRuleIds = new Set();
   let answerIndex = 0;
 
   for (let scenarioIndex = 0; scenarioIndex < scenarios.length; scenarioIndex += 1) {
@@ -67,12 +68,23 @@ function collectAnswers(answers, scenarios, rulebook) {
         totals[dimension] += choice.effects[dimension] || 0;
       }
       for (const id of choice.rule_refs) referencedRuleIds.add(id);
+      for (const option of node.choices) {
+        for (const id of option.rule_refs) responseRuleIds.add(id);
+      }
       summaries.push({
         scenario: scenario.title,
         situation: node.narration,
         selectedResponse: choice.text,
+        selectedAligned: choice.is_aligned,
         outcome: choice.consequence,
         ruleIds: choice.rule_refs,
+        responseOptions: node.choices.map((option, optionIndex) => ({
+          id: String.fromCharCode(65 + optionIndex),
+          text: option.text,
+          aligned: option.is_aligned,
+          feedback: option.consequence,
+          ruleRefs: option.rule_refs,
+        })),
       });
 
       answerIndex += 1;
@@ -108,6 +120,9 @@ function collectAnswers(answers, scenarios, rulebook) {
     scores,
     focusDimension,
     rules: focusRules.length ? focusRules : usedRules,
+    fallbackRules: [...new Set([...referencedRuleIds, ...responseRuleIds])]
+      .map((id) => rulesById.get(id))
+      .filter(Boolean),
   };
 }
 
@@ -150,45 +165,39 @@ function responseSchema() {
 }
 
 function buildRuleBasedFallback(context, notice) {
-  const rule = context.rules.find((item) => item.dimensions.includes(context.focusDimension))
-    || context.rules[0];
+  const availableRules = context.fallbackRules || context.rules;
+  const ruleById = new Map(availableRules.map((item) => [item.id, item]));
+  const target = context.summaries.find((item) =>
+    !item.selectedAligned && item.ruleIds.some((id) => ruleById.has(id)))
+    || context.summaries.find((item) =>
+      item.ruleIds.some((id) => ruleById.has(id)));
+  const rule = target?.ruleIds
+    .map((id) => ruleById.get(id))
+    .find((item) => item && item.dimensions.includes(context.focusDimension))
+    || target?.ruleIds.map((id) => ruleById.get(id)).find(Boolean)
+    || availableRules[0];
   if (!rule) {
     throw new Error("No cited rule is available for rule-based fallback feedback.");
+  }
+  if (
+    !target
+    || target.responseOptions.length !== 3
+    || target.responseOptions.filter((option) => option.aligned).length !== 1
+  ) {
+    throw new Error("A valid answered scenario with exactly one aligned response is required for rule-based fallback feedback.");
   }
 
   return {
     source: "rules",
     notice,
     focusDimension: context.focusDimension,
-    feedback: `Your ${context.focusDimension} practice indicator was ${context.scores[context.focusDimension]}/100, the lowest in this set. This is a practice cue, not a measure of your overall ability. A useful next step is to apply the guidance for "${rule.title}": ${rule.principle}`,
+    feedback: `In "${target.scenario}", you chose: "${target.selectedResponse}" ${target.selectedAligned ? "That choice aligned with the scenario guidance." : `The scenario outcome was: "${target.outcome}"`} A useful next step is to keep the guidance for "${rule.title}" in mind: ${rule.principle}`,
     followUp: {
-      title: "Rule-based practice",
-      situation: "Imagine a similar workplace decision comes up.",
-      question: `Which response best follows "${rule.title}"?`,
+      title: "Review a choice from your challenge",
+      situation: target.situation,
+      question: `Which response best follows the guidance for "${rule.title}"?`,
       ruleRefs: [rule.id],
-      choices: [
-        {
-          id: "A",
-          text: `Pause and apply the guidance: ${rule.principle}`,
-          aligned: true,
-          feedback: "This response follows the cited guidance.",
-          ruleRefs: [rule.id],
-        },
-        {
-          id: "B",
-          text: "Act immediately without checking whether the guidance applies.",
-          aligned: false,
-          feedback: "Check the situation against the relevant guidance before acting.",
-          ruleRefs: [rule.id],
-        },
-        {
-          id: "C",
-          text: "Ignore the guidance if another option feels quicker.",
-          aligned: false,
-          feedback: "Convenience alone is not a reason to ignore the cited guidance.",
-          ruleRefs: [rule.id],
-        },
-      ],
+      choices: target.responseOptions,
     },
   };
 }
@@ -311,7 +320,13 @@ module.exports = async function handler(req, res) {
       JSON.stringify({
         practiceIndicators: context.scores,
         focusDimension: context.focusDimension,
-        selectedScenarios: context.summaries,
+        selectedScenarios: context.summaries.map(({
+          scenario,
+          situation,
+          selectedResponse,
+          outcome,
+          ruleIds,
+        }) => ({ scenario, situation, selectedResponse, outcome, ruleIds })),
         ruleExcerpts: context.rules.map(({ id, title, quote, principle, dimensions }) => ({
           id,
           title,
