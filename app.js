@@ -26,7 +26,6 @@ const labels = {
   noReflection: "Choose the statement that best reflects what you learned.",
   scoreNote: "These practice indicators are based only on your choices in these scenarios. They are not validated measures of ability or a judgment of you as a person.",
   currentScore: "Current score",
-  scoreRule: "Correct choice +3 · Other choice −3",
   finalScore: "Final score",
   compliance: "Compliance",
   judgment: "Judgment",
@@ -67,6 +66,13 @@ let totalQuestions = 0;
 const dimensions = ["compliance", "judgment", "tone"];
 const startingScore = 70;
 const scoreChangePerAnswer = 3;
+const severeChoicePenalty = 6;
+
+function scoreBand(score) {
+  if (score >= 70) return "green";
+  if (score >= 60) return "yellow";
+  return "red";
+}
 
 function escapeText(value) {
   return String(value).replace(/[&<>"']/g, (char) => ({
@@ -270,18 +276,14 @@ function renderNode(nodeId) {
           <span>${escapeText(labels.currentScore)}</span>
           <strong><span data-current-score>${state.score}</span><small> / 100</small></strong>
         </div>
-        <div class="score-meter-track" role="meter" aria-label="${escapeText(labels.currentScore)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${state.score}">
+        <div class="score-meter-track score-band-${scoreBand(state.score)}" role="meter" aria-label="${escapeText(labels.currentScore)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${state.score}">
           <div class="score-meter-fill" data-score-fill style="width:${state.score}%"></div>
         </div>
-        <p class="score-rule">${escapeText(labels.scoreRule)}</p>
       </div>
       <div class="game-topline">
         <div>
           <span class="step-label">${escapeText(scenario.title)}</span>
           <span class="question-count">${escapeText(labels.step)} ${progress.current} ${escapeText(labels.questionOf)} ${progress.total}</span>
-        </div>
-        <div class="progress-track" role="progressbar" aria-label="${escapeText(labels.step)}" aria-valuemin="1" aria-valuemax="${progress.total}" aria-valuenow="${progress.current}">
-          <div class="progress-fill" style="width:${Math.round((progress.current / progress.total) * 100)}%"></div>
         </div>
       </div>
       <div class="conversation-turn">
@@ -312,7 +314,9 @@ function renderNode(nodeId) {
 }
 
 function choose(node, choice) {
-  const scoreDelta = choice.is_aligned ? scoreChangePerAnswer : -scoreChangePerAnswer;
+  const scoreDelta = choice.is_aligned
+    ? scoreChangePerAnswer
+    : -(choice.score_penalty ?? scoreChangePerAnswer);
   state.score = Math.max(0, Math.min(100, state.score + scoreDelta));
   for (const dimension of Object.keys(state.scores)) {
     state.scores[dimension] += choice.effects[dimension] ?? 0;
@@ -335,6 +339,7 @@ function updateScoreMeter() {
   scoreValue.textContent = String(state.score);
   scoreFill.style.width = `${state.score}%`;
   scoreMeter.setAttribute("aria-valuenow", String(state.score));
+  scoreMeter.className = `score-meter-track score-band-${scoreBand(state.score)}`;
 }
 
 async function renderChoiceFeedback(node, choice) {
@@ -468,7 +473,10 @@ function renderRadarChart(scores) {
 }
 
 function renderReport(ending) {
-  const scores = Object.fromEntries(dimensions.map((dimension) => [dimension, normalizedScore(dimension)]));
+  const scores = Object.fromEntries(dimensions.map((dimension) => [
+    dimension,
+    state.score === 100 ? 100 : normalizedScore(dimension),
+  ]));
   app.innerHTML = `
     <section class="game-card report-card">
       <p class="eyebrow">${state.choices.length} ${escapeText(labels.completed)} · ${scenarios.length} scenarios</p>
@@ -479,7 +487,7 @@ function renderReport(ending) {
           <span>${escapeText(labels.finalScore)}</span>
           <strong>${state.score}<small> / 100</small></strong>
         </div>
-        <div class="score-meter-track" role="meter" aria-label="${escapeText(labels.finalScore)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${state.score}">
+        <div class="score-meter-track score-band-${scoreBand(state.score)}" role="meter" aria-label="${escapeText(labels.finalScore)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${state.score}">
           <div class="score-meter-fill" style="width:${state.score}%"></div>
         </div>
       </section>
@@ -565,6 +573,9 @@ function validateScenario(data, rules) {
         if (!Number.isFinite(choice.effects[dimension]) || Math.abs(choice.effects[dimension]) > 2) {
           throw new Error(`Choice ${choice.id} has an invalid ${dimension} score.`);
         }
+      }
+      if (choice.score_penalty !== undefined && (choice.is_aligned || choice.score_penalty !== severeChoicePenalty)) {
+        throw new Error(`Choice ${choice.id} has an invalid severe-choice penalty.`);
       }
     }
   }

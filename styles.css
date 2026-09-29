@@ -296,21 +296,6 @@ h1 {
   font-size: 11px;
 }
 
-.progress-track {
-  width: min(46%, 230px);
-  height: 7px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #edf0eb;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: inherit;
-  background: var(--green);
-  transition: width 220ms ease;
-}
-
 .score-meter {
   margin-bottom: 22px;
 }
@@ -351,15 +336,19 @@ h1 {
 .score-meter-fill {
   height: 100%;
   border-radius: inherit;
-  background: var(--green);
-  transition: width 380ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  transition: width 380ms cubic-bezier(0.2, 0.75, 0.25, 1), background-color 220ms ease;
 }
 
-.score-rule {
-  margin: 6px 0 0;
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.4;
+.score-band-green .score-meter-fill {
+  background: var(--green);
+}
+
+.score-band-yellow .score-meter-fill {
+  background: #eab308;
+}
+
+.score-band-red .score-meter-fill {
+  background: #dc2626;
 }
 
 .scenario-copy {

@@ -49,6 +49,7 @@
           "effects": {"compliance": -2, "judgment": -2, "tone": -1},
           "consequence": "You have commented on a media inquiry instead of routing it to the official corporate communications team.",
           "is_aligned": false,
+          "score_penalty": 6,
           "next": "N2"
         },
         {
@@ -87,6 +88,7 @@
           "effects": {"compliance": -2, "judgment": -2, "tone": -1},
           "consequence": "Time pressure does not change the guide's direction to forward media requests to corporate communications without commenting.",
           "is_aligned": false,
+          "score_penalty": 6,
           "next": "N3"
         },
         {
@@ -125,6 +127,7 @@
           "effects": {"compliance": -2, "judgment": -2, "tone": -1},
           "consequence": "The request should be forwarded without commenting; forwarding it afterward does not undo the comment.",
           "is_aligned": false,
+          "score_penalty": 6,
           "ending_id": "S3-E-comment"
         },
         {
