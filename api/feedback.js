@@ -413,6 +413,14 @@ module.exports = async function handler(req, res) {
           consecutiveUnavailableResponses += 1;
           continue;
         }
+        if (apiResponse.status === 429 && index < models.length - 1) {
+          console.warn("Gemini model rate limit reached; trying fallback.", {
+            failedModel: model,
+            nextModel: models[index + 1],
+            providerStatus: providerError?.status,
+          });
+          break;
+        }
         if (apiResponse.status === 404 && index < models.length - 1) {
           console.warn("Gemini model not found; trying fallback.", {
             failedModel: model,
@@ -429,7 +437,7 @@ module.exports = async function handler(req, res) {
         ? providerError.message.slice(0, 500)
         : "No provider error details were returned.";
       const publicMessage = apiResponse.status === 429
-        ? "Gemini rate limit or quota reached (HTTP 429). Check your Google AI Studio usage and quota."
+        ? "Gemini rate limit or quota reached (HTTP 429) on all available models. Check your Google AI Studio usage and quota."
         : apiResponse.status === 403
           ? "Gemini rejected the API key or project access (HTTP 403). Check the Vercel GEMINI_API_KEY and its project permissions."
           : apiResponse.status === 400
