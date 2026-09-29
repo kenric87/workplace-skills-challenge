@@ -1,0 +1,178 @@
+{
+  "scenario_id": "S2",
+  "title": "A Better Way to Give Feedback",
+  "language": "en",
+  "source_document": "GitLab Communication & Collaboration Guide (Extended Excerpt)",
+  "attribution": "Fictional scenario for development and testing, based on the supplied adapted rule excerpt. It is not official GitLab training or policy.",
+  "rule_ids": ["GL-R5", "GL-R6"],
+  "characters": [
+    {
+      "id": "C1",
+      "name": "You",
+      "role": "Project teammate",
+      "personality": "Thoughtful and constructive",
+      "speech_style": "Calm and specific",
+      "relationship_start": 50
+    },
+    {
+      "id": "C2",
+      "name": "Casey",
+      "role": "Teammate responsible for a delayed handoff",
+      "personality": "Busy and open to useful feedback",
+      "speech_style": "Direct",
+      "relationship_start": 50
+    }
+  ],
+  "start": "N1",
+  "nodes": [
+    {
+      "id": "N1",
+      "speaker": "C1",
+      "narration": "A project handoff arrived two days after the agreed time, delaying the next team's work. You want to raise the issue with Casey. What do you say?",
+      "allow_free_text": false,
+      "choices": [
+        {
+          "id": "S2-N1-A",
+          "text": "“Casey is careless and always slows everyone down.”",
+          "rule_refs": ["GL-R5"],
+          "effects": {"compliance": 0, "judgment": -1, "tone": -2},
+          "consequence": "The feedback labels Casey instead of describing the specific action or outcome, making it harder to discuss a constructive next step.",
+          "is_aligned": false,
+          "next": "N2"
+        },
+        {
+          "id": "S2-N1-B",
+          "text": "“The handoff arrived two days after our agreed time, which delayed the next step. Can we work out what blocked it and agree on a plan?”",
+          "rule_refs": ["GL-R5", "GL-R6"],
+          "effects": {"compliance": 1, "judgment": 2, "tone": 2},
+          "consequence": "You describe the outcome factually, focus on an action rather than a personal attribute, and invite a way forward.",
+          "is_aligned": true,
+          "next": "N2"
+        },
+        {
+          "id": "S2-N1-C",
+          "text": "“No worries, everything is fine,” even though the delay affected the project.",
+          "rule_refs": ["GL-R6"],
+          "effects": {"compliance": 0, "judgment": -1, "tone": 0},
+          "consequence": "Avoiding the issue leaves the process bottleneck unclear and unresolved.",
+          "is_aligned": false,
+          "next": "N2"
+        }
+      ]
+    },
+    {
+      "id": "N2",
+      "speaker": "C2",
+      "narration": "Casey says they were waiting for an input from another team, but no one knew the handoff was blocked. How do you respond?",
+      "allow_free_text": false,
+      "choices": [
+        {
+          "id": "S2-N2-A",
+          "text": "“Thanks for explaining. Let's note where the handoff got stuck and agree how to flag a blocker earlier next time.”",
+          "rule_refs": ["GL-R5", "GL-R6"],
+          "effects": {"compliance": 1, "judgment": 2, "tone": 2},
+          "consequence": "You keep the discussion factual and focused on an actionable process improvement.",
+          "is_aligned": true,
+          "next": "N3"
+        },
+        {
+          "id": "S2-N2-B",
+          "text": "“You should have figured it out yourself. You always make excuses.”",
+          "rule_refs": ["GL-R5"],
+          "effects": {"compliance": 0, "judgment": -1, "tone": -2},
+          "consequence": "The response makes a personal judgment rather than clarifying the specific blocker or a next step.",
+          "is_aligned": false,
+          "next": "N3"
+        },
+        {
+          "id": "S2-N2-C",
+          "text": "“Let's not mention the delay. We can just keep hoping the handoff works next time.”",
+          "rule_refs": ["GL-R6"],
+          "effects": {"compliance": 0, "judgment": -1, "tone": 0},
+          "consequence": "The bottleneck remains hidden, so the team loses an opportunity to address it directly.",
+          "is_aligned": false,
+          "next": "N3"
+        }
+      ]
+    },
+    {
+      "id": "N3",
+      "speaker": "C1",
+      "narration": "You are writing a short follow-up so you both remember the discussion. Which note is most useful?",
+      "allow_free_text": false,
+      "choices": [
+        {
+          "id": "S2-N3-A",
+          "text": "“The handoff was delayed while we waited for the other team's input. We agreed to flag blocked dependencies earlier and check the handoff date together.”",
+          "rule_refs": ["GL-R5", "GL-R6"],
+          "effects": {"compliance": 1, "judgment": 2, "tone": 2},
+          "consequence": "The note describes the process issue factually and records a concrete next step without making it about someone's character.",
+          "is_aligned": true,
+          "ending_id": "S2-E-good"
+        },
+        {
+          "id": "S2-N3-B",
+          "text": "“Casey is unreliable and needs to care more about the team.”",
+          "rule_refs": ["GL-R5"],
+          "effects": {"compliance": 0, "judgment": -1, "tone": -2},
+          "consequence": "The note uses a personal label rather than describing the specific action, outcome, or change needed.",
+          "is_aligned": false,
+          "ending_id": "S2-E-personal"
+        },
+        {
+          "id": "S2-N3-C",
+          "text": "“Everything went perfectly.”",
+          "rule_refs": ["GL-R6"],
+          "effects": {"compliance": 0, "judgment": -1, "tone": 0},
+          "consequence": "The note hides the delay and provides no information that could help resolve the bottleneck.",
+          "is_aligned": false,
+          "ending_id": "S2-E-vague"
+        }
+      ]
+    }
+  ],
+  "endings": [
+    {
+      "id": "S2-E-good",
+      "title": "Specific feedback, clear next step",
+      "summary": "You described the impact and agreed how to flag blockers earlier.",
+      "feedback": "Useful feedback focuses on specific actions or outcomes, describes process bottlenecks factually, and points toward a way forward.",
+      "rule_refs": ["GL-R5", "GL-R6"],
+      "reflection": {
+        "prompt": "What made your feedback easier to act on?",
+        "options": [
+          {"id": "S2-G-R1", "text": "It described an observable outcome and a concrete next step.", "aligned": true},
+          {"id": "S2-G-R2", "text": "It avoided mentioning the issue at all.", "aligned": false}
+        ]
+      }
+    },
+    {
+      "id": "S2-E-personal",
+      "title": "Bring the feedback back to actions",
+      "summary": "The note focused on Casey's character instead of the handoff and its impact.",
+      "feedback": "Try describing the specific action or outcome, the effect it had, and a constructive next step. Keep the problem factual so it can be resolved.",
+      "rule_refs": ["GL-R5", "GL-R6"],
+      "reflection": {
+        "prompt": "How could you make the feedback more useful?",
+        "options": [
+          {"id": "S2-P-R1", "text": "Replace the personal label with the delayed handoff, its impact, and an agreed next step.", "aligned": true},
+          {"id": "S2-P-R2", "text": "Make the personal label sound more cheerful.", "aligned": false}
+        ]
+      }
+    },
+    {
+      "id": "S2-E-vague",
+      "title": "Describe the bottleneck clearly",
+      "summary": "The follow-up did not record the delay or how to prevent the blocker next time.",
+      "feedback": "Factual feedback can name a problem without attacking a person. Clear information helps the team resolve process bottlenecks directly.",
+      "rule_refs": ["GL-R6"],
+      "reflection": {
+        "prompt": "What should a useful follow-up include?",
+        "options": [
+          {"id": "S2-V-R1", "text": "The observable delay and the step agreed to address it.", "aligned": true},
+          {"id": "S2-V-R2", "text": "A positive statement that leaves out the problem.", "aligned": false}
+        ]
+      }
+    }
+  ]
+}

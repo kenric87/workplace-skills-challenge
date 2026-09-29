@@ -1,0 +1,252 @@
+{
+  "scenario_id": "S1",
+  "title": "The Roadmap in the Public Channel",
+  "language": "en",
+  "source_document": "GitLab Communication & Collaboration Guide (Extended Excerpt)",
+  "attribution": "Scenario written for development and testing using the supplied adapted rule excerpt. It is not official GitLab training or policy. Confirm the current source wording and exact Creative Commons license variant before public use.",
+  "content_note": "This fictional scenario treats an unreleased roadmap as sensitive information and specifies which characters need access. The learning feedback is limited to the rules referenced below; it is not a judgment of the learner's character.",
+  "rule_ids": ["GL-R1", "GL-R2", "GL-R3"],
+  "learning_goals": [
+    "Distinguish searchable public work discussion from sensitive information that must stay restricted.",
+    "Limit unreleased roadmap access to people who need to know.",
+    "Record decisions in a written location that has appropriate access controls."
+  ],
+  "scoring": {
+    "dimensions": ["compliance", "judgment", "tone"],
+    "method": "Add each selected choice's effects. Scores are scenario-specific learning feedback, not an assessment of a person's overall workplace ability.",
+    "per_choice_range": [-2, 2]
+  },
+  "characters": [
+    {
+      "id": "C1",
+      "name": "You",
+      "role": "New member of the product team",
+      "personality": "Thoughtful and still learning the team's communication norms",
+      "speech_style": "Calm and respectful",
+      "relationship_start": 50
+    },
+    {
+      "id": "C2",
+      "name": "Jordan",
+      "role": "Colleague from a neighbouring team who is not involved in the unreleased roadmap",
+      "personality": "Well-intentioned and focused on getting quick feedback",
+      "speech_style": "Friendly and informal",
+      "relationship_start": 50
+    }
+  ],
+  "start": "N1",
+  "nodes": [
+    {
+      "id": "N1",
+      "speaker": "C2",
+      "narration": "Jordan messages you: “Could you post the new product roadmap in the company-wide project channel? It would be easier to get feedback there.” The roadmap has not been released, and Jordan is not part of the group that needs access to it.",
+      "allow_free_text": false,
+      "choices": [
+        {
+          "id": "N1-A",
+          "text": "Post the complete roadmap in the company-wide channel so feedback can start straight away.",
+          "rule_refs": ["GL-R2", "GL-R3"],
+          "effects": {
+            "compliance": -2,
+            "judgment": -2,
+            "tone": -1
+          },
+          "consequence": "People outside the group that needs the information can now see unreleased plans. A public channel makes discussion searchable, but that does not make sensitive roadmap details appropriate to share there.",
+          "is_aligned": false,
+          "next": "N2"
+        },
+        {
+          "id": "N1-B",
+          "text": "Send Jordan the complete roadmap in a direct message instead; that avoids posting it publicly.",
+          "rule_refs": ["GL-R2", "GL-R3"],
+          "effects": {
+            "compliance": -2,
+            "judgment": -1,
+            "tone": 0
+          },
+          "consequence": "Changing the channel does not solve the need-to-know issue: Jordan is not involved in the roadmap. Direct messages are not a workaround for restricting access to sensitive information.",
+          "is_aligned": false,
+          "next": "N2"
+        },
+        {
+          "id": "N1-C",
+          "text": "Pause before sharing. Clarify who needs the roadmap and prepare a public update that does not reveal unreleased details.",
+          "rule_refs": ["GL-R2", "GL-R3"],
+          "effects": {
+            "compliance": 0,
+            "judgment": 1,
+            "tone": 2
+          },
+          "consequence": "You have avoided sharing the sensitive details before checking the audience. Jordan asks what should go in the public channel and where the full roadmap should live.",
+          "is_aligned": true,
+          "next": "N2"
+        }
+      ]
+    },
+    {
+      "id": "N2",
+      "speaker": "C2",
+      "narration": "Jordan confirms the project channel is visible company-wide. The full roadmap is only for the product group working on it. How do you share the update?",
+      "allow_free_text": false,
+      "choices": [
+        {
+          "id": "N2-A",
+          "text": "Post a brief, non-sensitive summary publicly, and keep the full roadmap in an access-restricted space for the product group that needs it.",
+          "rule_refs": ["GL-R2", "GL-R3"],
+          "effects": {
+            "compliance": 1,
+            "judgment": 2,
+            "tone": 2
+          },
+          "consequence": "The wider team can follow the work without seeing unreleased details, while the full roadmap remains limited to its intended audience. Jordan asks how you will record the decision.",
+          "is_aligned": true,
+          "next": "N3"
+        },
+        {
+          "id": "N2-B",
+          "text": "Post the complete roadmap publicly, but label the message “confidential.”",
+          "rule_refs": ["GL-R2", "GL-R3"],
+          "effects": {
+            "compliance": -2,
+            "judgment": -2,
+            "tone": -1
+          },
+          "consequence": "A confidentiality label does not restrict who can see a company-wide channel. The unreleased roadmap is still exposed beyond the people who need to know.",
+          "is_aligned": false,
+          "next": "N3"
+        },
+        {
+          "id": "N2-C",
+          "text": "Send the complete roadmap in a group DM to a large cross-functional group so they can coordinate quickly.",
+          "rule_refs": ["GL-R2", "GL-R3"],
+          "effects": {
+            "compliance": -2,
+            "judgment": -1,
+            "tone": -1
+          },
+          "consequence": "The group has not been checked against who needs the roadmap. A smaller or private conversation is not automatically appropriate if it gives sensitive information to people without a need to know.",
+          "is_aligned": false,
+          "next": "N3"
+        }
+      ]
+    },
+    {
+      "id": "N3",
+      "speaker": "C1",
+      "narration": "You and Jordan have agreed on a safe public summary and a restricted location for the full roadmap. How will you make the decision useful to the team later?",
+      "allow_free_text": false,
+      "choices": [
+        {
+          "id": "N3-A",
+          "text": "Write the decision in an access-restricted issue, then share a link to the non-sensitive summary in the public channel.",
+          "rule_refs": ["GL-R1", "GL-R2", "GL-R3"],
+          "effects": {
+            "compliance": 1,
+            "judgment": 2,
+            "tone": 2
+          },
+          "consequence": "The decision is documented for the people who need it, while the public channel remains useful without exposing roadmap details.",
+          "is_aligned": true,
+          "ending_id": "E-aligned"
+        },
+        {
+          "id": "N3-B",
+          "text": "Put the full roadmap and decision in a public issue so everyone can search for it.",
+          "rule_refs": ["GL-R1", "GL-R2", "GL-R3"],
+          "effects": {
+            "compliance": -2,
+            "judgment": -2,
+            "tone": -1
+          },
+          "consequence": "Writing the decision down helps make it findable, but putting sensitive roadmap details in a public issue gives them an unnecessarily broad audience.",
+          "is_aligned": false,
+          "ending_id": "E-public"
+        },
+        {
+          "id": "N3-C",
+          "text": "Leave the agreement only in the conversation; documenting it feels risky because the roadmap is sensitive.",
+          "rule_refs": ["GL-R1", "GL-R3"],
+          "effects": {
+            "compliance": 0,
+            "judgment": -1,
+            "tone": -1
+          },
+          "consequence": "Keeping the roadmap restricted is important, but the decision can still be written down in a location with appropriate access controls.",
+          "is_aligned": false,
+          "ending_id": "E-no-record"
+        }
+      ]
+    }
+  ],
+  "endings": [
+    {
+      "id": "E-public",
+      "title": "The audience was too broad",
+      "summary": "The full unreleased roadmap ended up in a company-wide location.",
+      "feedback": "The guide favors public work discussions, but explicitly keeps sensitive information such as unreleased roadmaps out of public channels and limits it to people who need to know. Public discoverability does not override that restriction.",
+      "rule_refs": ["GL-R2", "GL-R3"],
+      "reflection": {
+        "prompt": "What made the public channel seem like the right place, and what audience check would you make next time?",
+        "options": [
+          {
+            "id": "E-public-R1",
+            "text": "I focused on visibility; next time I will check whether the information is sensitive and who needs access before posting.",
+            "aligned": true
+          },
+          {
+            "id": "E-public-R2",
+            "text": "If a channel is searchable, it is suitable for any work information.",
+            "aligned": false
+          }
+        ]
+      },
+      "retry_from": "N1"
+    },
+    {
+      "id": "E-no-record",
+      "title": "Keep the decision findable and appropriately restricted",
+      "summary": "The sensitive details stayed private, but the agreement was not written down.",
+      "feedback": "The guide says to translate spoken agreements into written documentation. Use a written location with access controls appropriate to the sensitivity of the roadmap.",
+      "rule_refs": ["GL-R1", "GL-R3"],
+      "reflection": {
+        "prompt": "How can you make a decision searchable without making sensitive details public?",
+        "options": [
+          {
+            "id": "E-no-record-R1",
+            "text": "Record it in a written location restricted to the people who need the details.",
+            "aligned": true
+          },
+          {
+            "id": "E-no-record-R2",
+            "text": "Avoid all written records whenever information is confidential.",
+            "aligned": false
+          }
+        ]
+      },
+      "retry_from": "N1"
+    },
+    {
+      "id": "E-aligned",
+      "title": "Transparent where appropriate, restricted where necessary",
+      "summary": "The team can find the safe update, and the unreleased roadmap remains available only to its intended audience.",
+      "feedback": "You balanced searchable work communication with the need to protect unreleased plans, and recorded the agreement in a location with suitable access controls.",
+      "rule_refs": ["GL-R1", "GL-R2", "GL-R3"],
+      "reflection": {
+        "prompt": "Which part of your approach helped balance transparency with confidentiality?",
+        "options": [
+          {
+            "id": "E-aligned-R1",
+            "text": "Separating a non-sensitive public summary from the restricted roadmap, then documenting the decision for the right audience.",
+            "aligned": true
+          },
+          {
+            "id": "E-aligned-R2",
+            "text": "Keeping all work discussion private so nothing can be seen by a wider team.",
+            "aligned": false
+          }
+        ]
+      },
+      "retry_from": "N1"
+    }
+  ]
+}

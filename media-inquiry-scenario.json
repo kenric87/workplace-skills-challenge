@@ -1,0 +1,186 @@
+{
+  "scenario_id": "S3",
+  "title": "A Reporter Gets in Touch",
+  "language": "en",
+  "source_document": "GitLab Communication & Collaboration Guide (Extended Excerpt)",
+  "attribution": "Fictional scenario for development and testing, based on the supplied adapted rule excerpt. It is not official GitLab training or policy.",
+  "rule_ids": ["GL-R4"],
+  "characters": [
+    {
+      "id": "C1",
+      "name": "You",
+      "role": "Team member",
+      "personality": "Helpful and careful with information",
+      "speech_style": "Professional and concise",
+      "relationship_start": 50
+    },
+    {
+      "id": "C2",
+      "name": "Alex",
+      "role": "Reporter",
+      "personality": "Persistent but professional",
+      "speech_style": "Direct",
+      "relationship_start": 50
+    },
+    {
+      "id": "C3",
+      "name": "Morgan",
+      "role": "Colleague",
+      "personality": "Wants to help respond quickly",
+      "speech_style": "Informal",
+      "relationship_start": 50
+    }
+  ],
+  "start": "N1",
+  "nodes": [
+    {
+      "id": "N1",
+      "speaker": "C2",
+      "narration": "A reporter emails asking about an unreleased product announcement. You are not on the corporate communications team. What do you do?",
+      "allow_free_text": false,
+      "choices": [
+        {
+          "id": "S3-N1-A",
+          "text": "Reply with what you think the announcement will say, but mark it as unofficial.",
+          "rule_refs": ["GL-R4"],
+          "effects": {"compliance": -2, "judgment": -2, "tone": -1},
+          "consequence": "You have commented on a media inquiry instead of routing it to the official corporate communications team.",
+          "is_aligned": false,
+          "next": "N2"
+        },
+        {
+          "id": "S3-N1-B",
+          "text": "Forward the request to the official corporate communications team without commenting.",
+          "rule_refs": ["GL-R4"],
+          "effects": {"compliance": 2, "judgment": 2, "tone": 1},
+          "consequence": "The request is routed to the designated team, and you avoid commenting on it yourself.",
+          "is_aligned": true,
+          "next": "N2"
+        },
+        {
+          "id": "S3-N1-C",
+          "text": "Delete the email and take no action.",
+          "rule_refs": ["GL-R4"],
+          "effects": {"compliance": -1, "judgment": -1, "tone": 0},
+          "consequence": "The inquiry has not reached the official team that handles media requests.",
+          "is_aligned": false,
+          "next": "N2"
+        }
+      ]
+    },
+    {
+      "id": "N2",
+      "speaker": "C3",
+      "narration": "Morgan says, “I know a little about the announcement. Maybe we should just give Alex a quick answer.” How do you respond?",
+      "allow_free_text": false,
+      "choices": [
+        {
+          "id": "S3-N2-A",
+          "text": "Agree to send a short comment so the reporter has something before the deadline.",
+          "rule_refs": ["GL-R4"],
+          "effects": {"compliance": -2, "judgment": -2, "tone": -1},
+          "consequence": "Time pressure does not change the guide's direction to forward media requests to corporate communications without commenting.",
+          "is_aligned": false,
+          "next": "N3"
+        },
+        {
+          "id": "S3-N2-B",
+          "text": "Explain that the request should go to the official corporate communications team, and forward it without adding a comment.",
+          "rule_refs": ["GL-R4"],
+          "effects": {"compliance": 2, "judgment": 2, "tone": 2},
+          "consequence": "You keep the response respectful while ensuring the inquiry reaches the official team without an unauthorized comment.",
+          "is_aligned": true,
+          "next": "N3"
+        },
+        {
+          "id": "S3-N2-C",
+          "text": "Ask Morgan to reply instead, since they know more about the announcement.",
+          "rule_refs": ["GL-R4"],
+          "effects": {"compliance": -2, "judgment": -1, "tone": 0},
+          "consequence": "Passing the reply to another colleague does not route the media inquiry to the official communications team.",
+          "is_aligned": false,
+          "next": "N3"
+        }
+      ]
+    },
+    {
+      "id": "N3",
+      "speaker": "C2",
+      "narration": "The reporter follows up and asks whether you can confirm one detail. What is your response?",
+      "allow_free_text": false,
+      "choices": [
+        {
+          "id": "S3-N3-A",
+          "text": "Confirm the detail because it sounds minor, then forward the email afterward.",
+          "rule_refs": ["GL-R4"],
+          "effects": {"compliance": -2, "judgment": -2, "tone": -1},
+          "consequence": "The request should be forwarded without commenting; forwarding it afterward does not undo the comment.",
+          "is_aligned": false,
+          "ending_id": "S3-E-comment"
+        },
+        {
+          "id": "S3-N3-B",
+          "text": "Forward the follow-up to the official corporate communications team without commenting.",
+          "rule_refs": ["GL-R4"],
+          "effects": {"compliance": 2, "judgment": 2, "tone": 1},
+          "consequence": "You route the follow-up to the designated team and do not comment on the inquiry.",
+          "is_aligned": true,
+          "ending_id": "S3-E-routed"
+        },
+        {
+          "id": "S3-N3-C",
+          "text": "Tell the reporter you cannot comment, but do not forward the request.",
+          "rule_refs": ["GL-R4"],
+          "effects": {"compliance": -1, "judgment": 0, "tone": 1},
+          "consequence": "You avoid commenting on the subject, but the request still needs to be forwarded to the official corporate communications team.",
+          "is_aligned": false,
+          "ending_id": "S3-E-unforwarded"
+        }
+      ]
+    }
+  ],
+  "endings": [
+    {
+      "id": "S3-E-comment",
+      "title": "Route media questions before commenting",
+      "summary": "You answered the reporter before forwarding the inquiry.",
+      "feedback": "The guide says to immediately forward media requests to the official corporate communications team without commenting.",
+      "rule_refs": ["GL-R4"],
+      "reflection": {
+        "prompt": "What is the safest next step when a reporter asks for a comment?",
+        "options": [
+          {"id": "S3-C-R1", "text": "Forward the request to the official team without commenting.", "aligned": true},
+          {"id": "S3-C-R2", "text": "Answer briefly and forward the request afterward.", "aligned": false}
+        ]
+      }
+    },
+    {
+      "id": "S3-E-routed",
+      "title": "The inquiry reached the right team",
+      "summary": "You forwarded the reporter's request and follow-up without commenting.",
+      "feedback": "You followed the guide's process by routing the media inquiry to corporate communications without commenting yourself.",
+      "rule_refs": ["GL-R4"],
+      "reflection": {
+        "prompt": "Which action best matched the guide?",
+        "options": [
+          {"id": "S3-R-R1", "text": "Forward the request to corporate communications without commenting.", "aligned": true},
+          {"id": "S3-R-R2", "text": "Share an unofficial comment if you think it is accurate.", "aligned": false}
+        ]
+      }
+    },
+    {
+      "id": "S3-E-unforwarded",
+      "title": "Complete the handoff",
+      "summary": "You avoided commenting, but did not forward the request to the official team.",
+      "feedback": "Avoiding a comment is only part of the guidance. Forward the request to the official corporate communications team as well.",
+      "rule_refs": ["GL-R4"],
+      "reflection": {
+        "prompt": "What completes the appropriate response to a media inquiry?",
+        "options": [
+          {"id": "S3-U-R1", "text": "Forward it to corporate communications without commenting.", "aligned": true},
+          {"id": "S3-U-R2", "text": "Decline to comment and leave the request there.", "aligned": false}
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,456 @@
+const app = document.querySelector("#app");
+const scenarioUrls = [
+  "./gitlab-roadmap-sharing-scenario.json",
+  "./team-feedback-scenario.json",
+  "./media-inquiry-scenario.json",
+].map((url) => new URL(url, window.location.href));
+const rulesUrl = new URL("./northwind-team-conduct-guide.json", window.location.href);
+
+const labels = {
+  start: "Start the challenge",
+  choose: "What would you do?",
+  step: "Question",
+  outcome: "What happens next",
+  aligned: "This choice aligns with the scenario rules",
+  reconsider: "Consider another approach",
+  next: "Continue",
+  toResult: "Continue to results",
+  playAgain: "Play again",
+  rules: "Related rules",
+  quote: "Source",
+  principle: "In plain language",
+  reflect: "Final reflection",
+  reflectionGood: "Good reflection. You identified the key principle in this scenario.",
+  reflectionTry: "Review the scenario feedback and choose the option that follows the relevant rule and process.",
+  noReflection: "Choose the statement that best reflects what you learned.",
+  scoreNote: "These practice indicators are based only on your choices in these scenarios. They are not validated measures of ability or a judgment of you as a person.",
+  compliance: "Compliance",
+  judgment: "Judgment",
+  tone: "Communication",
+  loadError: "Could not load the scenario",
+  loadErrorDetails: "Make sure the website files and all scenario and rulebook JSON files are in the same folder, and open the site through a web server.",
+  source: "Source",
+  format: "Challenge format",
+  duration: "Estimated time",
+  durationValue: "About 5–7 minutes · 9 questions",
+  journey: "Your challenge",
+  ending: "Scenario complete",
+  notFound: "Scenario data not found",
+  finishScenario: "View scenario wrap-up",
+  report: "Your practice profile",
+  reportIntro: "Your radar chart summarizes patterns in the choices you made across all three scenarios.",
+  scoreScale: "Each axis is a scenario-specific practice indicator from 0 to 100. 50 is the neutral midpoint.",
+  strongest: "Relative strength in this set",
+  growthArea: "An area to practice next",
+  chartLabel: "Radar chart showing practice indicators for compliance, judgment, and communication",
+  completed: "All 9 questions completed",
+  nextScenario: "Continue to next scenario",
+  resultButton: "View your overall profile",
+  questionOf: "of",
+};
+
+let scenarios = [];
+let scenarioIndex = 0;
+let scenario;
+let ruleById;
+let nodeById;
+let endingById;
+let state;
+let totalQuestions = 0;
+
+const dimensions = ["compliance", "judgment", "tone"];
+const dimensionTips = {
+  compliance: "Practice checking the exact rule and following the required process.",
+  judgment: "Practice checking the context, audience, and likely consequences before acting.",
+  tone: "Practice communicating clearly, respectfully, and constructively.",
+};
+
+function escapeText(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[char]);
+}
+
+function renderRules(ruleIds) {
+  const rules = ruleIds.map((id) => ruleById.get(id)).filter(Boolean);
+  if (rules.length === 0) return "";
+
+  return `
+    <div class="rule-list">
+      ${rules.map((rule) => `
+        <article class="rule-card">
+          <strong>${escapeText(rule.id)} · ${escapeText(rule.title)}</strong>
+          <p class="rule-quote">${escapeText(labels.quote)}: “${escapeText(rule.quote)}”</p>
+          <p class="rule-principle">${escapeText(labels.principle)}: ${escapeText(rule.principle)}</p>
+        </article>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderLanding() {
+  app.innerHTML = `
+    <section class="hero-card">
+      <div class="hero-top">
+        <p class="eyebrow">Workplace Lab · Interactive practice</p>
+        <h1>Workplace Skills Challenge</h1>
+        <p class="hero-description">Practice handling sensitive information, giving useful feedback, and responding to media inquiries. Make choices across three short scenarios, then review your practice profile.</p>
+      </div>
+      <div class="hero-bottom">
+        <div>
+          <span class="meta-label">${escapeText(labels.format)}</span>
+          <span class="meta-value">3 scenarios · 9 decisions · 3 practice dimensions</span>
+        </div>
+        <div>
+          <span class="meta-label">${escapeText(labels.duration)}</span>
+          <span class="meta-value">${escapeText(labels.durationValue)}</span>
+        </div>
+        <button class="primary-button" type="button" data-action="start">${escapeText(labels.start)} →</button>
+      </div>
+    </section>
+    <section class="scenario-preview" aria-label="Challenge scenarios">
+      ${scenarios.map((item, index) => `
+        <article class="scenario-preview-card">
+          <span class="preview-number">0${index + 1}</span>
+          <div>
+            <h2>${escapeText(item.title)}</h2>
+            <p>${item.nodes.length} decisions · ${escapeText(item.rule_ids.map((id) => ruleById.get(id)?.title ?? id).join(" · "))}</p>
+          </div>
+        </article>
+      `).join("")}
+    </section>
+  `;
+
+  app.querySelector('[data-action="start"]').addEventListener("click", () => {
+    state = newGame();
+    scenarioIndex = 0;
+    scenario = scenarios[scenarioIndex];
+    nodeById = new Map(scenario.nodes.map((node) => [node.id, node]));
+    endingById = new Map(scenario.endings.map((ending) => [ending.id, ending]));
+    renderNode(scenario.start);
+  });
+}
+
+function newGame() {
+  return {
+    scores: { compliance: 0, judgment: 0, tone: 0 },
+    choices: [],
+    reflections: [],
+  };
+}
+
+function progressFor(nodeId) {
+  const index = scenario.nodes.findIndex((node) => node.id === nodeId);
+  const previousQuestions = scenarios
+    .slice(0, scenarioIndex)
+    .reduce((sum, item) => sum + item.nodes.length, 0);
+  return {
+    current: previousQuestions + index + 1,
+    total: totalQuestions,
+  };
+}
+
+function renderNode(nodeId) {
+  const node = nodeById.get(nodeId);
+  if (!node) {
+    renderError(labels.notFound);
+    return;
+  }
+
+  const progress = progressFor(nodeId);
+  const speaker = scenario.characters.find((character) => character.id === node.speaker);
+  app.innerHTML = `
+    <section class="game-card">
+      <div class="game-topline">
+        <div>
+          <span class="step-label">${escapeText(scenario.title)}</span>
+          <span class="question-count">${escapeText(labels.step)} ${progress.current} ${escapeText(labels.questionOf)} ${progress.total}</span>
+        </div>
+        <div class="progress-track" role="progressbar" aria-label="${escapeText(labels.step)}" aria-valuemin="1" aria-valuemax="${progress.total}" aria-valuenow="${progress.current}">
+          <div class="progress-fill" style="width:${Math.round((progress.current / progress.total) * 100)}%"></div>
+        </div>
+      </div>
+      ${speaker ? `<span class="speaker">${escapeText(speaker.name)} · ${escapeText(speaker.role)}</span>` : ""}
+      <p class="scenario-copy">${escapeText(node.narration)}</p>
+      <p class="choice-heading">${escapeText(labels.choose)}</p>
+      <div class="choice-list">
+        ${node.choices.map((choice, index) => `
+          <button class="choice-button" type="button" data-choice="${escapeText(choice.id)}">
+            <span class="choice-letter">${String.fromCharCode(65 + index)}</span>
+            <span class="choice-text">${escapeText(choice.text)}</span>
+          </button>
+        `).join("")}
+      </div>
+    </section>
+  `;
+
+  app.querySelectorAll("[data-choice]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const choice = node.choices.find((item) => item.id === button.dataset.choice);
+      choose(node, choice);
+    });
+  });
+}
+
+function choose(node, choice) {
+  for (const dimension of Object.keys(state.scores)) {
+    state.scores[dimension] += choice.effects[dimension] ?? 0;
+  }
+  state.choices.push({
+    nodeId: node.id,
+    choiceId: choice.id,
+    ruleRefs: choice.rule_refs,
+  });
+
+  renderChoiceFeedback(choice);
+}
+
+function renderChoiceFeedback(choice) {
+  const aligned = choice.is_aligned;
+  const target = choice.next
+    ? () => renderNode(choice.next)
+    : () => renderEnding(choice.ending_id);
+  const buttonText = choice.next ? labels.next : labels.finishScenario;
+
+  const feedback = document.createElement("section");
+  feedback.className = `feedback-panel${aligned ? "" : " is-misaligned"}`;
+  feedback.innerHTML = `
+    <h2 class="feedback-title">${escapeText(aligned ? labels.aligned : labels.reconsider)}</h2>
+    <p class="feedback-copy">${escapeText(choice.consequence)}</p>
+    ${renderRules(choice.rule_refs)}
+    <div class="feedback-actions">
+      <button class="primary-button" type="button" data-action="continue">${escapeText(buttonText)} →</button>
+    </div>
+  `;
+  app.querySelector(".choice-list").replaceWith(feedback);
+  app.querySelector(".choice-heading").remove();
+  feedback.querySelector('[data-action="continue"]').addEventListener("click", target);
+}
+
+function renderEnding(endingId) {
+  const ending = endingById.get(endingId);
+  if (!ending) {
+    renderError(labels.notFound);
+    return;
+  }
+
+  state.endingId = endingId;
+  const hasNextScenario = scenarioIndex < scenarios.length - 1;
+  app.innerHTML = `
+    <section class="game-card">
+      <div class="game-topline">
+        <span class="step-label">${escapeText(labels.ending)}</span>
+        <span class="step-label">${escapeText(scenario.title)}</span>
+      </div>
+      <p class="eyebrow">${escapeText(labels.journey)}</p>
+      <h1>${escapeText(ending.title)}</h1>
+      <p class="scenario-copy">${escapeText(ending.summary)}</p>
+      <section class="feedback-panel${endingId.endsWith("good") || endingId.endsWith("routed") || endingId === "E-aligned" ? "" : " is-misaligned"}">
+        <h2 class="feedback-title">Scenario feedback</h2>
+        <p class="feedback-copy">${escapeText(ending.feedback)}</p>
+        ${renderRules(ending.rule_refs)}
+      </section>
+      <div class="result-actions">
+        <button class="primary-button" type="button" data-action="continue">
+          ${escapeText(hasNextScenario ? labels.nextScenario : labels.resultButton)} →
+        </button>
+      </div>
+    </section>
+  `;
+
+  app.querySelector('[data-action="continue"]').addEventListener("click", () => {
+    if (hasNextScenario) {
+      scenarioIndex += 1;
+      scenario = scenarios[scenarioIndex];
+      nodeById = new Map(scenario.nodes.map((node) => [node.id, node]));
+      endingById = new Map(scenario.endings.map((item) => [item.id, item]));
+      renderNode(scenario.start);
+      return;
+    }
+    renderReport(ending);
+  });
+}
+
+function normalizedScore(dimension) {
+  const maximum = totalQuestions * 2;
+  return Math.round(Math.max(0, Math.min(100, ((state.scores[dimension] + maximum) / (maximum * 2)) * 100)));
+}
+
+function radarPoints(values, radius, centerX = 190, centerY = 155) {
+  const angles = [-90, 30, 150];
+  return angles.map((angle, index) => {
+    const radians = (angle * Math.PI) / 180;
+    const value = values[index] / 100;
+    return `${centerX + Math.cos(radians) * radius * value},${centerY + Math.sin(radians) * radius * value}`;
+  }).join(" ");
+}
+
+function renderRadarChart(scores) {
+  const values = dimensions.map((dimension) => scores[dimension]);
+  const labelsAt = [
+    { x: 190, y: 22, anchor: "middle", text: labels.compliance },
+    { x: 326, y: 235, anchor: "start", text: labels.judgment },
+    { x: 54, y: 235, anchor: "end", text: labels.tone },
+  ];
+  return `
+    <svg class="radar-chart" viewBox="0 0 380 270" role="img" aria-label="${escapeText(labels.chartLabel)}">
+      <title>${escapeText(labels.chartLabel)}</title>
+      ${[20, 40, 60, 80, 100].map((value) => `
+        <polygon class="radar-grid" points="${radarPoints([value, value, value], 105)}"></polygon>
+      `).join("")}
+      ${[0, 1, 2].map((index) => `
+        <line class="radar-axis" x1="190" y1="155" x2="${[190, 281, 99][index]}" y2="${[50, 207.5, 207.5][index]}"></line>
+      `).join("")}
+      <polygon class="radar-area" points="${radarPoints(values, 105)}"></polygon>
+      ${radarPoints(values, 105).split(" ").map((point) => {
+        const [cx, cy] = point.split(",");
+        return `<circle class="radar-point" cx="${cx}" cy="${cy}" r="4"></circle>`;
+      }).join("")}
+      ${labelsAt.map((item) => `
+        <text class="radar-label" x="${item.x}" y="${item.y}" text-anchor="${item.anchor}">${escapeText(item.text)}</text>
+      `).join("")}
+    </svg>
+  `;
+}
+
+function renderReport(ending) {
+  const scores = Object.fromEntries(dimensions.map((dimension) => [dimension, normalizedScore(dimension)]));
+  const sorted = [...dimensions].sort((left, right) => scores[right] - scores[left]);
+  const best = sorted[0];
+  const next = sorted.at(-1);
+  app.innerHTML = `
+    <section class="game-card report-card">
+      <p class="eyebrow">${escapeText(labels.completed)}</p>
+      <h1>${escapeText(labels.report)}</h1>
+      <p class="report-intro">${escapeText(labels.reportIntro)}</p>
+      <div class="radar-wrap">${renderRadarChart(scores)}</div>
+      <div class="score-grid">
+        ${dimensions.map((dimension) => `
+          <div class="score-card">
+            <span class="score-name">${escapeText(labels[dimension])}</span>
+            <span class="score-value">${scores[dimension]}<small>/100</small></span>
+          </div>
+        `).join("")}
+      </div>
+      <p class="score-note">${escapeText(labels.scoreScale)} ${escapeText(labels.scoreNote)}</p>
+      <div class="insight-grid">
+        <article class="insight-card">
+          <span class="meta-label">${escapeText(labels.strongest)}</span>
+          <strong>${escapeText(labels[best])} · ${scores[best]}/100</strong>
+        </article>
+        <article class="insight-card">
+          <span class="meta-label">${escapeText(labels.growthArea)}</span>
+          <strong>${escapeText(labels[next])} · ${scores[next]}/100</strong>
+          <p>${escapeText(dimensionTips[next])}</p>
+        </article>
+      </div>
+      <section class="feedback-panel">
+        <h2 class="feedback-title">Final reflection</h2>
+        <p class="feedback-copy">${escapeText(ending.reflection.prompt)}</p>
+        <div class="reflection-list">
+          ${ending.reflection.options.map((option) => `
+            <button class="reflection-button" type="button" data-reflection="${escapeText(option.id)}" aria-pressed="false">
+              ${escapeText(option.text)}
+            </button>
+          `).join("")}
+        </div>
+        <p class="reflection-response" role="status">${escapeText(labels.noReflection)}</p>
+      </section>
+      <div class="result-actions">
+        <button class="primary-button" type="button" data-action="restart">${escapeText(labels.playAgain)} ↻</button>
+      </div>
+    </section>
+  `;
+
+  app.querySelectorAll("[data-reflection]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const selected = ending.reflection.options.find((option) => option.id === button.dataset.reflection);
+      state.reflections.push({ optionId: selected.id });
+      app.querySelectorAll("[data-reflection]").forEach((item) => {
+        item.setAttribute("aria-pressed", String(item === button));
+      });
+      app.querySelector(".reflection-response").textContent =
+        selected.aligned ? labels.reflectionGood : labels.reflectionTry;
+    });
+  });
+
+  app.querySelector('[data-action="restart"]').addEventListener("click", () => {
+    state = newGame();
+    scenarioIndex = 0;
+    scenario = scenarios[scenarioIndex];
+    nodeById = new Map(scenario.nodes.map((node) => [node.id, node]));
+    endingById = new Map(scenario.endings.map((item) => [item.id, item]));
+    renderNode(scenario.start);
+  });
+}
+
+function renderError(message) {
+  app.innerHTML = `
+    <section class="error-card">
+      <h1>${escapeText(labels.loadError)}</h1>
+      <p>${escapeText(message)}</p>
+      <p>${escapeText(labels.loadErrorDetails)}</p>
+    </section>
+  `;
+}
+
+function validateScenario(data, rules) {
+  if (!data || !Array.isArray(data.nodes) || !Array.isArray(data.endings)) {
+    throw new Error("Scenario data is missing nodes or endings.");
+  }
+  const ids = new Set(rules.rules.map((rule) => rule.id));
+  const referencedIds = [
+    ...data.rule_ids,
+    ...data.nodes.flatMap((node) => node.choices.flatMap((choice) => choice.rule_refs)),
+    ...data.endings.flatMap((ending) => ending.rule_refs),
+  ];
+  const missing = referencedIds.filter((id) => !ids.has(id));
+  if (missing.length) {
+    throw new Error(`Scenario references unknown rules: ${[...new Set(missing)].join(", ")}`);
+  }
+  const nodeIds = new Set(data.nodes.map((node) => node.id));
+  const endingIds = new Set(data.endings.map((ending) => ending.id));
+  for (const node of data.nodes) {
+    for (const choice of node.choices) {
+      const hasValidNext = choice.next && nodeIds.has(choice.next);
+      const hasValidEnding = choice.ending_id && endingIds.has(choice.ending_id);
+      if (Boolean(hasValidNext) === Boolean(hasValidEnding)) {
+        throw new Error(`Choice ${choice.id} must point to exactly one valid next node or ending.`);
+      }
+      for (const dimension of dimensions) {
+        if (!Number.isFinite(choice.effects[dimension]) || Math.abs(choice.effects[dimension]) > 2) {
+          throw new Error(`Choice ${choice.id} has an invalid ${dimension} score.`);
+        }
+      }
+    }
+  }
+}
+
+async function initialize() {
+  try {
+    const [scenarioResponses, rulesResponse] = await Promise.all([
+      Promise.all(scenarioUrls.map((url) => fetch(url))),
+      fetch(rulesUrl),
+    ]);
+    if (scenarioResponses.some((response) => !response.ok) || !rulesResponse.ok) {
+      throw new Error("Could not fetch all scenarios or the rulebook.");
+    }
+    [scenarios, ruleById] = await Promise.all([
+      Promise.all(scenarioResponses.map((response) => response.json())),
+      rulesResponse.json(),
+    ]);
+    scenarios.forEach((item) => validateScenario(item, ruleById));
+    totalQuestions = scenarios.reduce((sum, item) => sum + item.nodes.length, 0);
+    ruleById = new Map(ruleById.rules.map((rule) => [rule.id, rule]));
+    renderLanding();
+  } catch (error) {
+    console.error("Failed to initialize the scenario:", error);
+    renderError(`${labels.loadErrorDetails} (${error.message})`);
+  }
+}
+
+initialize();

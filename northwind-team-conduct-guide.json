@@ -1,0 +1,154 @@
+{
+  "doc_title": "Workplace Conduct Guides — Northwind Sample & GitLab Excerpt",
+  "attribution": "Northwind rules are from a fictional sample document written for development and testing, not a real organisation's policy. GitLab rules are adapted from the GitLab Handbook (handbook.gitlab.com); the exact Creative Commons license variant must be confirmed before public use.",
+  "rules": [
+    {
+      "id": "R1",
+      "title": "No negative talk behind people's backs",
+      "source_document": "Northwind Group — Team Conduct Guide (Excerpt)",
+      "source_clause": "1.1",
+      "quote": "We do not share negative comments about a colleague or manager with people who cannot help resolve the issue.",
+      "principle": "Don't criticise a colleague or manager to people who can't do anything about it.",
+      "dimensions": ["tone", "judgment"],
+      "severity": 1
+    },
+    {
+      "id": "R2",
+      "title": "Raise concerns early and directly",
+      "source_document": "Northwind Group — Team Conduct Guide (Excerpt)",
+      "source_clause": "2.1",
+      "quote": "Try a direct, respectful conversation first where it is safe to do so.",
+      "principle": "If something bothers you, talk to the person involved first, respectfully, when it is safe.",
+      "dimensions": ["tone", "judgment"],
+      "severity": 1
+    },
+    {
+      "id": "R3",
+      "title": "Report serious conduct, don't investigate",
+      "source_document": "Northwind Group — Team Conduct Guide (Excerpt)",
+      "source_clause": "2.2",
+      "quote": "must be reported to your manager or People & Culture. Do not investigate it yourself.",
+      "principle": "Harassment, safety issues and possible breaches go to the formal channel; don't play detective.",
+      "dimensions": ["compliance", "judgment"],
+      "severity": 3
+    },
+    {
+      "id": "R4",
+      "title": "Declare gifts over AUD 50",
+      "source_document": "Northwind Group — Team Conduct Guide (Excerpt)",
+      "source_clause": "3.1",
+      "quote": "Gifts from clients or suppliers valued over AUD 50 must be declared to your manager within 48 hours.",
+      "principle": "Tell your manager within 48 hours about any client or supplier gift worth more than AUD 50.",
+      "dimensions": ["compliance"],
+      "severity": 2
+    },
+    {
+      "id": "R5",
+      "title": "No gifts during an open tender",
+      "source_document": "Northwind Group — Team Conduct Guide (Excerpt)",
+      "source_clause": "3.2",
+      "quote": "Never accept a gift, of any value, while a tender or contract decision involving that supplier is open.",
+      "principle": "While a decision involving a supplier is open, accept nothing from them, however small.",
+      "dimensions": ["compliance", "judgment"],
+      "severity": 3
+    },
+    {
+      "id": "R6",
+      "title": "Client talk stays out of public places",
+      "source_document": "Northwind Group — Team Conduct Guide (Excerpt)",
+      "source_clause": "4.2",
+      "quote": "Do not discuss client matters in public places, including cafés, lifts and public transport.",
+      "principle": "Don't talk about clients where strangers can overhear.",
+      "dimensions": ["compliance", "judgment"],
+      "severity": 2
+    },
+    {
+      "id": "R7",
+      "title": "Ask when the guide doesn't cover it",
+      "source_document": "Northwind Group — Team Conduct Guide (Excerpt)",
+      "source_clause": "5.1",
+      "quote": "If a situation is not covered by this guide, ask your manager before acting.",
+      "principle": "In a grey area, check with your manager first instead of guessing.",
+      "dimensions": ["judgment", "compliance"],
+      "severity": 2
+    },
+    {
+      "id": "R8",
+      "title": "Deadlines don't excuse cutting corners",
+      "source_document": "Northwind Group — Team Conduct Guide (Excerpt)",
+      "source_clause": "5.2",
+      "quote": "Deadlines do not override this guide. If you feel pressured to cut a corner, say so.",
+      "principle": "Time pressure is not a reason to skip the rules; speak up if you feel pushed to.",
+      "dimensions": ["judgment", "tone"],
+      "severity": 2
+    },
+    {
+      "id": "GL-R1",
+      "title": "Write decisions down",
+      "source_document": "GitLab Communication & Collaboration Guide (Extended Excerpt)",
+      "source_clause": "1.3",
+      "source_status": "confirmed",
+      "quote": "translate spoken agreements into written documentation (such as Handbook entries or Issues)",
+      "principle": "If you agree something out loud, write it down where others can find it.",
+      "dimensions": ["compliance", "judgment"],
+      "severity": 1
+    },
+    {
+      "id": "GL-R2",
+      "title": "Public channels by default",
+      "source_document": "GitLab Communication & Collaboration Guide (Extended Excerpt)",
+      "source_clause": "2.1",
+      "source_status": "confirmed",
+      "quote": "Conduct work-related discussions in public channels to keep information searchable and transparent, and avoid 1-on-1 or small group DMs unless strictly confidential",
+      "principle": "Discuss work in public channels so everyone can see it, and keep DMs for things that really are confidential.",
+      "dimensions": ["compliance", "judgment"],
+      "severity": 2
+    },
+    {
+      "id": "GL-R3",
+      "title": "Keep sensitive data out of public channels",
+      "source_document": "GitLab Communication & Collaboration Guide (Extended Excerpt)",
+      "source_clause": "4.1",
+      "source_status": "confirmed",
+      "quote": "Safeguard company financial metrics (SAFE data), unreleased roadmaps, and personnel discussions by keeping them out of public channels and restricting access strictly to need-to-know stakeholders",
+      "principle": "Financials, unreleased plans and people matters stay with the few who need to know.",
+      "dimensions": ["compliance", "judgment"],
+      "severity": 3
+    },
+    {
+      "id": "GL-R4",
+      "title": "Redirect media inquiries",
+      "source_document": "GitLab Communication & Collaboration Guide (Extended Excerpt)",
+      "source_clause": "4.3",
+      "source_status": "confirmed",
+      "source_url": "https://handbook.gitlab.com/handbook/legal/corporate-communications/",
+      "quote": "immediately forward the request to the official corporate communications team without commenting",
+      "principle": "If a reporter contacts you, pass them to the communications team and don't comment yourself.",
+      "dimensions": ["compliance", "tone"],
+      "severity": 2
+    },
+    {
+      "id": "GL-R5",
+      "title": "Feedback on actions, not on the person",
+      "source_document": "GitLab Communication & Collaboration Guide (Extended Excerpt)",
+      "source_clause": "5.2",
+      "source_status": "confirmed",
+      "source_url": "https://handbook.gitlab.com/handbook/values/",
+      "quote": "Direct feedback at specific actions or outcomes rather than personal attributes",
+      "principle": "Give feedback about what someone did, not about who they are, and suggest a way forward.",
+      "dimensions": ["tone", "judgment"],
+      "severity": 2
+    },
+    {
+      "id": "GL-R6",
+      "title": "Describe problems factually",
+      "source_document": "GitLab Communication & Collaboration Guide (Extended Excerpt)",
+      "source_clause": "5.3",
+      "source_status": "confirmed",
+      "quote": "describe process bottlenecks factually so they can be resolved directly",
+      "principle": "Say plainly when something is slow or broken; cheerful wording hides problems.",
+      "dimensions": ["tone", "judgment"],
+      "severity": 1
+    }
+  ]
+}
