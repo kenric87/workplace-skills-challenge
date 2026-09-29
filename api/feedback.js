@@ -171,14 +171,6 @@ function buildRuleBasedFallback(context, notice) {
     !item.selectedAligned && item.ruleIds.some((id) => ruleById.has(id)))
     || context.summaries.find((item) =>
       item.ruleIds.some((id) => ruleById.has(id)));
-  const rule = target?.ruleIds
-    .map((id) => ruleById.get(id))
-    .find((item) => item && item.dimensions.includes(context.focusDimension))
-    || target?.ruleIds.map((id) => ruleById.get(id)).find(Boolean)
-    || availableRules[0];
-  if (!rule) {
-    throw new Error("No cited rule is available for rule-based fallback feedback.");
-  }
   if (
     !target
     || target.responseOptions.length !== 3
@@ -186,17 +178,28 @@ function buildRuleBasedFallback(context, notice) {
   ) {
     throw new Error("A valid answered scenario with exactly one aligned response is required for rule-based fallback feedback.");
   }
+  const alignedOption = target.responseOptions.find((option) => option.aligned);
+  const relevantRuleIds = alignedOption.ruleRefs.filter((id) => ruleById.has(id));
+  const relevantRules = (relevantRuleIds.length ? relevantRuleIds : target.ruleIds)
+    .map((id) => ruleById.get(id))
+    .filter(Boolean);
+  if (!relevantRules.length) {
+    throw new Error("No cited rule is available for rule-based fallback feedback.");
+  }
+  const guidance = relevantRules
+    .map((item) => `"${item.title}": ${item.principle}`)
+    .join(" ");
 
   return {
     source: "rules",
     notice,
     focusDimension: context.focusDimension,
-    feedback: `In "${target.scenario}", you chose: "${target.selectedResponse}" ${target.selectedAligned ? "That choice aligned with the scenario guidance." : `The scenario outcome was: "${target.outcome}"`} A useful next step is to keep the guidance for "${rule.title}" in mind: ${rule.principle}`,
+    feedback: `In "${target.scenario}", you chose: "${target.selectedResponse}" ${target.selectedAligned ? "That choice aligned with the scenario guidance." : `The scenario outcome was: "${target.outcome}"`} The relevant guidance is ${guidance}`,
     followUp: {
       title: "Review a choice from your challenge",
       situation: target.situation,
-      question: `Which response best follows the guidance for "${rule.title}"?`,
-      ruleRefs: [rule.id],
+      question: "Which response best follows the relevant guidance?",
+      ruleRefs: relevantRules.map((item) => item.id),
       choices: target.responseOptions,
     },
   };
