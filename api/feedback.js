@@ -1,5 +1,6 @@
 const DEFAULT_ORIGINS = [
   "https://kenric87.github.io",
+  "https://workplace-skills-challenge.vercel.app",
   "http://localhost:8765",
   "http://127.0.0.1:8765",
   "http://localhost:8000",
