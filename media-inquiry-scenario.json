@@ -42,6 +42,7 @@
         {
           "id": "S3-N1-A",
           "text": "Reply with what you think the announcement will say, but mark it as unofficial.",
+          "reply": "“Even an unofficial guess could be taken as a comment. Please route the request to the communications team.”",
           "rule_refs": ["GL-R4"],
           "effects": {"compliance": -2, "judgment": -2, "tone": -1},
           "consequence": "You have commented on a media inquiry instead of routing it to the official corporate communications team.",
@@ -51,6 +52,7 @@
         {
           "id": "S3-N1-B",
           "text": "Forward the request to the official corporate communications team without commenting.",
+          "reply": "“Thanks for sending it to the right team. They can coordinate the official response.”",
           "rule_refs": ["GL-R4"],
           "effects": {"compliance": 2, "judgment": 2, "tone": 1},
           "consequence": "The request is routed to the designated team, and you avoid commenting on it yourself.",
@@ -60,6 +62,7 @@
         {
           "id": "S3-N1-C",
           "text": "Delete the email and take no action.",
+          "reply": "“The request still needs to reach the team that handles media inquiries.”",
           "rule_refs": ["GL-R4"],
           "effects": {"compliance": -1, "judgment": -1, "tone": 0},
           "consequence": "The inquiry has not reached the official team that handles media requests.",
@@ -77,6 +80,7 @@
         {
           "id": "S3-N2-A",
           "text": "Agree to send a short comment so the reporter has something before the deadline.",
+          "reply": "“A quick comment can still be an unauthorised response. Let's send the request to communications.”",
           "rule_refs": ["GL-R4"],
           "effects": {"compliance": -2, "judgment": -2, "tone": -1},
           "consequence": "Time pressure does not change the guide's direction to forward media requests to corporate communications without commenting.",
@@ -86,6 +90,7 @@
         {
           "id": "S3-N2-B",
           "text": "Explain that the request should go to the official corporate communications team, and forward it without adding a comment.",
+          "reply": "“Agreed. That gets the question to the right people without either of us commenting.”",
           "rule_refs": ["GL-R4"],
           "effects": {"compliance": 2, "judgment": 2, "tone": 2},
           "consequence": "You keep the response respectful while ensuring the inquiry reaches the official team without an unauthorized comment.",
@@ -95,6 +100,7 @@
         {
           "id": "S3-N2-C",
           "text": "Ask Morgan to reply instead, since they know more about the announcement.",
+          "reply": "“Knowing more about the announcement doesn't make Morgan the official contact for media questions.”",
           "rule_refs": ["GL-R4"],
           "effects": {"compliance": -2, "judgment": -1, "tone": 0},
           "consequence": "Passing the reply to another colleague does not route the media inquiry to the official communications team.",
@@ -112,6 +118,7 @@
         {
           "id": "S3-N3-A",
           "text": "Confirm the detail because it sounds minor, then forward the email afterward.",
+          "reply": "“Please don't confirm it first; forward the follow-up so the communications team can respond.”",
           "rule_refs": ["GL-R4"],
           "effects": {"compliance": -2, "judgment": -2, "tone": -1},
           "consequence": "The request should be forwarded without commenting; forwarding it afterward does not undo the comment.",
@@ -121,6 +128,7 @@
         {
           "id": "S3-N3-B",
           "text": "Forward the follow-up to the official corporate communications team without commenting.",
+          "reply": "“Thank you. The communications team now has the full follow-up and can handle it.”",
           "rule_refs": ["GL-R4"],
           "effects": {"compliance": 2, "judgment": 2, "tone": 1},
           "consequence": "You route the follow-up to the designated team and do not comment on the inquiry.",
@@ -130,6 +138,7 @@
         {
           "id": "S3-N3-C",
           "text": "Tell the reporter you cannot comment, but do not forward the request.",
+          "reply": "“Not commenting is a good start, but the request still needs to be forwarded to communications.”",
           "rule_refs": ["GL-R4"],
           "effects": {"compliance": -1, "judgment": 0, "tone": 1},
           "consequence": "You avoid commenting on the subject, but the request still needs to be forwarded to the official corporate communications team.",

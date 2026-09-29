@@ -34,6 +34,7 @@
         {
           "id": "S2-N1-A",
           "text": "“Casey is careless and always slows everyone down.”",
+          "reply": "“That sounds personal. Can we talk about the handoff itself and what got in the way?”",
           "rule_refs": ["GL-R5"],
           "effects": {"compliance": 0, "judgment": -1, "tone": -2},
           "consequence": "The feedback labels Casey instead of describing the specific action or outcome, making it harder to discuss a constructive next step.",
@@ -43,6 +44,7 @@
         {
           "id": "S2-N1-B",
           "text": "“The handoff arrived two days after our agreed time, which delayed the next step. Can we work out what blocked it and agree on a plan?”",
+          "reply": "“Thanks for being specific. I was waiting on another team's input; let's work out how to flag that blocker sooner.”",
           "rule_refs": ["GL-R5", "GL-R6"],
           "effects": {"compliance": 1, "judgment": 2, "tone": 2},
           "consequence": "You describe the outcome factually, focus on an action rather than a personal attribute, and invite a way forward.",
@@ -52,6 +54,7 @@
         {
           "id": "S2-N1-C",
           "text": "“No worries, everything is fine,” even though the delay affected the project.",
+          "reply": "“I appreciate that, but I don't think we have worked out why the handoff was late yet.”",
           "rule_refs": ["GL-R6"],
           "effects": {"compliance": 0, "judgment": -1, "tone": 0},
           "consequence": "Avoiding the issue leaves the process bottleneck unclear and unresolved.",
@@ -69,6 +72,7 @@
         {
           "id": "S2-N2-A",
           "text": "“Thanks for explaining. Let's note where the handoff got stuck and agree how to flag a blocker earlier next time.”",
+          "reply": "“That would help. I'll raise the dependency sooner next time so the team knows the handoff is blocked.”",
           "rule_refs": ["GL-R5", "GL-R6"],
           "effects": {"compliance": 1, "judgment": 2, "tone": 2},
           "consequence": "You keep the discussion factual and focused on an actionable process improvement.",
@@ -78,6 +82,7 @@
         {
           "id": "S2-N2-B",
           "text": "“You should have figured it out yourself. You always make excuses.”",
+          "reply": "“I was trying to explain the blocker. That makes it harder to focus on fixing the handoff.”",
           "rule_refs": ["GL-R5"],
           "effects": {"compliance": 0, "judgment": -1, "tone": -2},
           "consequence": "The response makes a personal judgment rather than clarifying the specific blocker or a next step.",
@@ -87,6 +92,7 @@
         {
           "id": "S2-N2-C",
           "text": "“Let's not mention the delay. We can just keep hoping the handoff works next time.”",
+          "reply": "“If we don't name the blocker, we may run into the same delay again.”",
           "rule_refs": ["GL-R6"],
           "effects": {"compliance": 0, "judgment": -1, "tone": 0},
           "consequence": "The bottleneck remains hidden, so the team loses an opportunity to address it directly.",
@@ -104,6 +110,7 @@
         {
           "id": "S2-N3-A",
           "text": "“The handoff was delayed while we waited for the other team's input. We agreed to flag blocked dependencies earlier and check the handoff date together.”",
+          "reply": "“That captures what happened and gives us a clear step to try next time.”",
           "rule_refs": ["GL-R5", "GL-R6"],
           "effects": {"compliance": 1, "judgment": 2, "tone": 2},
           "consequence": "The note describes the process issue factually and records a concrete next step without making it about someone's character.",
@@ -113,6 +120,7 @@
         {
           "id": "S2-N3-B",
           "text": "“Casey is unreliable and needs to care more about the team.”",
+          "reply": "“That describes me, not what happened with the handoff. Can we keep the note factual?”",
           "rule_refs": ["GL-R5"],
           "effects": {"compliance": 0, "judgment": -1, "tone": -2},
           "consequence": "The note uses a personal label rather than describing the specific action, outcome, or change needed.",
@@ -122,6 +130,7 @@
         {
           "id": "S2-N3-C",
           "text": "“Everything went perfectly.”",
+          "reply": "“The note leaves out the delay, so it won't help us prevent the same blocker.”",
           "rule_refs": ["GL-R6"],
           "effects": {"compliance": 0, "judgment": -1, "tone": 0},
           "consequence": "The note hides the delay and provides no information that could help resolve the bottleneck.",

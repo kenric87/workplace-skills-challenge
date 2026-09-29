@@ -1,0 +1,115 @@
+{
+  "scenario_id": "S4",
+  "title": "The Unexpected Deadline",
+  "language": "en",
+  "source_document": "Fictional workplace practice scenario",
+  "attribution": "Original fictional scenario for practice. The dialogue and consequences are predefined and are not official organisational policy.",
+  "rule_ids": ["R2", "R8"],
+  "learning_goals": [
+    "Raise capacity and deadline concerns early and respectfully.",
+    "Agree priorities without skipping required review steps."
+  ],
+  "characters": [
+    {
+      "id": "C1",
+      "name": "You",
+      "role": "Team member",
+      "personality": "Responsible and thoughtful",
+      "speech_style": "Clear and respectful",
+      "relationship_start": 50
+    },
+    {
+      "id": "C2",
+      "name": "Alex",
+      "role": "Manager",
+      "personality": "Under pressure but open to practical options",
+      "speech_style": "Direct",
+      "relationship_start": 50
+    }
+  ],
+  "start": "N1",
+  "nodes": [
+    {
+      "id": "N1",
+      "speaker": "C2",
+      "narration": "Your manager needs an urgent compliance report for the VP by the end of the day. Your schedule is already full, and the report needs a careful review. What do you say?",
+      "allow_free_text": false,
+      "choices": [
+        {
+          "id": "S4-N1-A",
+          "text": "“Sure, I'll drop everything else and get it done today.”",
+          "reply": "“Thanks for jumping in. Before you drop everything, let's check what's already due. I don't want us to create a second problem.”",
+          "rule_refs": ["R8"],
+          "effects": {"compliance": 0, "judgment": -1, "tone": 0},
+          "consequence": "You were cooperative, but committed before checking the trade-offs or review time. Confirm priorities and protect the steps needed to complete the report accurately.",
+          "is_aligned": false,
+          "ending_id": "S4-E-agreed"
+        },
+        {
+          "id": "S4-N1-B",
+          "text": "“I can't. I'm too busy with my current deadlines.”",
+          "reply": "“I understand you're busy, but I need more than a no. Bring me an option so we can decide what moves.”",
+          "rule_refs": ["R2"],
+          "effects": {"compliance": 0, "judgment": 0, "tone": -1},
+          "consequence": "Setting a boundary is reasonable, but a flat refusal gives no path to resolve the urgent request. Explain the conflict respectfully and suggest a concrete next step.",
+          "is_aligned": false,
+          "ending_id": "S4-E-refused"
+        },
+        {
+          "id": "S4-N1-C",
+          "text": "“I can help. My current deadlines are A and B; which should move so I can finish this accurately and keep the review step?”",
+          "reply": "“That's fair. Let's move the vendor review to tomorrow and keep the client deadline in place. Thanks for raising the trade-off early.”",
+          "rule_refs": ["R2", "R8"],
+          "effects": {"compliance": 1, "judgment": 2, "tone": 2},
+          "consequence": "You made your capacity visible, asked your manager to agree the priority trade-off, and kept the review step in view instead of silently cutting corners.",
+          "is_aligned": true,
+          "ending_id": "S4-E-prioritised"
+        }
+      ]
+    }
+  ],
+  "endings": [
+    {
+      "id": "S4-E-agreed",
+      "title": "Check the trade-offs before committing",
+      "summary": "You accepted the urgent report before checking the work already due.",
+      "feedback": "Cooperation helps, but an immediate commitment can hide capacity and review risks. Confirm what should move before promising a deadline.",
+      "rule_refs": ["R8"],
+      "reflection": {
+        "prompt": "What should you check before accepting an urgent deadline?",
+        "options": [
+          {"id": "S4-A-R1", "text": "Agree which existing task moves and preserve the necessary review.", "aligned": true},
+          {"id": "S4-A-R2", "text": "Promise to finish everything, then skip review if time runs short.", "aligned": false}
+        ]
+      }
+    },
+    {
+      "id": "S4-E-refused",
+      "title": "Pair a boundary with a next step",
+      "summary": "You named that you were busy but did not offer a way to resolve the conflict.",
+      "feedback": "A respectful conversation can make the deadline and workload visible, then agree what changes. Suggesting a trade-off makes the concern actionable.",
+      "rule_refs": ["R2"],
+      "reflection": {
+        "prompt": "How can you make a capacity concern actionable?",
+        "options": [
+          {"id": "S4-B-R1", "text": "Explain the conflict and ask which current priority should move.", "aligned": true},
+          {"id": "S4-B-R2", "text": "End the conversation with a flat refusal.", "aligned": false}
+        ]
+      }
+    },
+    {
+      "id": "S4-E-prioritised",
+      "title": "Make the priorities visible",
+      "summary": "You raised the capacity conflict and agreed a practical trade-off with Alex.",
+      "feedback": "You communicated early and respectfully, clarified which deadline would move, and kept the review step in the plan.",
+      "rule_refs": ["R2", "R8"],
+      "reflection": {
+        "prompt": "What made this response workable?",
+        "options": [
+          {"id": "S4-C-R1", "text": "It surfaced capacity, agreed priorities, and kept the review step.", "aligned": true},
+          {"id": "S4-C-R2", "text": "It promised every task would be finished without changing anything.", "aligned": false}
+        ]
+      }
+    }
+  ]
+}

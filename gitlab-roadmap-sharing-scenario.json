@@ -45,6 +45,7 @@
         {
           "id": "N1-A",
           "text": "Post the complete roadmap in the company-wide channel so feedback can start straight away.",
+          "reply": "“I want feedback quickly, but I hadn't considered that everyone in the channel can see the unreleased details.”",
           "rule_refs": ["GL-R2", "GL-R3"],
           "effects": {
             "compliance": -2,
@@ -58,6 +59,7 @@
         {
           "id": "N1-B",
           "text": "Send Jordan the complete roadmap in a direct message instead; that avoids posting it publicly.",
+          "reply": "“A direct message feels more private, but I see that I'm not part of the group that needs the roadmap.”",
           "rule_refs": ["GL-R2", "GL-R3"],
           "effects": {
             "compliance": -2,
@@ -71,6 +73,7 @@
         {
           "id": "N1-C",
           "text": "Pause before sharing. Clarify who needs the roadmap and prepare a public update that does not reveal unreleased details.",
+          "reply": "“That makes sense. What can we safely share publicly, and where should the full roadmap live?”",
           "rule_refs": ["GL-R2", "GL-R3"],
           "effects": {
             "compliance": 0,
@@ -92,6 +95,7 @@
         {
           "id": "N2-A",
           "text": "Post a brief, non-sensitive summary publicly, and keep the full roadmap in an access-restricted space for the product group that needs it.",
+          "reply": "“A short update helps the wider team follow along while the full plan stays with the product group. How should we record the decision?”",
           "rule_refs": ["GL-R2", "GL-R3"],
           "effects": {
             "compliance": 1,
@@ -105,6 +109,7 @@
         {
           "id": "N2-B",
           "text": "Post the complete roadmap publicly, but label the message “confidential.”",
+          "reply": "“Would a confidential label actually stop people in this company-wide channel from opening it?”",
           "rule_refs": ["GL-R2", "GL-R3"],
           "effects": {
             "compliance": -2,
@@ -118,6 +123,7 @@
         {
           "id": "N2-C",
           "text": "Send the complete roadmap in a group DM to a large cross-functional group so they can coordinate quickly.",
+          "reply": "“We haven't checked whether everyone in that group needs access to the unreleased plan.”",
           "rule_refs": ["GL-R2", "GL-R3"],
           "effects": {
             "compliance": -2,
@@ -139,6 +145,7 @@
         {
           "id": "N3-A",
           "text": "Write the decision in an access-restricted issue, then share a link to the non-sensitive summary in the public channel.",
+          "reply": "“Good. The team can find the update, and the detailed roadmap stays in the right place.”",
           "rule_refs": ["GL-R1", "GL-R2", "GL-R3"],
           "effects": {
             "compliance": 1,
@@ -152,6 +159,7 @@
         {
           "id": "N3-B",
           "text": "Put the full roadmap and decision in a public issue so everyone can search for it.",
+          "reply": "“The decision is easy to find, but the public issue exposes details that should stay restricted.”",
           "rule_refs": ["GL-R1", "GL-R2", "GL-R3"],
           "effects": {
             "compliance": -2,
@@ -165,6 +173,7 @@
         {
           "id": "N3-C",
           "text": "Leave the agreement only in the conversation; documenting it feels risky because the roadmap is sensitive.",
+          "reply": "“We can still document the decision; let's use a place with access controls for the sensitive details.”",
           "rule_refs": ["GL-R1", "GL-R3"],
           "effects": {
             "compliance": 0,
