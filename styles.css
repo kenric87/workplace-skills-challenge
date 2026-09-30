@@ -1065,26 +1065,14 @@ h1 {
 
 .conversation-feedback {
   display: grid;
-  gap: 22px;
+  gap: 16px;
   padding: clamp(22px, 4vw, 34px);
   border-radius: 22px;
-  cursor: pointer;
-  transition: border-color 160ms ease, box-shadow 160ms ease;
-}
-
-.conversation-feedback:hover {
-  border-color: #a7c5ae;
-  box-shadow: 0 8px 24px rgb(29 54 39 / 8%);
-}
-
-.conversation-feedback:focus-visible {
-  outline: 3px solid #92b9a0;
-  outline-offset: 3px;
 }
 
 .response-panel {
   display: grid;
-  gap: 18px;
+  gap: 16px;
   margin-top: 20px;
 }
 
@@ -1183,6 +1171,51 @@ h1 {
   line-height: 1.75;
 }
 
+.character-response-card,
+.coaching-feedback-card {
+  min-width: 0;
+  padding: clamp(15px, 3vw, 22px);
+  border: 1px solid #dfe7de;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.character-response-card {
+  border-color: #d8e5eb;
+  background: #f8fbfc;
+}
+
+.character-response-card .response-turn {
+  align-items: center;
+  gap: 13px;
+}
+
+.character-response-card .character-avatar.is-compact {
+  width: 50px;
+  height: 50px;
+  flex-basis: 50px;
+}
+
+.character-response-card .response-dialogue {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.character-response-card .response-dialogue p {
+  font-size: 15px;
+}
+
+.coaching-feedback-card {
+  border-color: #d6e6da;
+  background: #fff;
+}
+
+.conversation-feedback.is-misaligned .coaching-feedback-card {
+  border-color: #eadcc9;
+  background: #fffdfa;
+}
+
 .explanation-title {
   margin: 0;
   color: #34443a;
@@ -1260,22 +1293,21 @@ h1 {
   margin-top: 10px;
 }
 
-.feedback-advance-hint {
-  display: flex;
-  flex-wrap: wrap;
+.feedback-next-button {
+  display: inline-flex;
+  min-height: 50px;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px 16px;
-  padding-top: 16px;
-  border-top: 1px solid rgb(101 115 106 / 18%);
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.5;
+  justify-content: center;
+  gap: 12px;
+  justify-self: end;
+  padding-inline: 22px;
 }
 
-.feedback-advance-action {
-  color: var(--green-dark);
-  font-weight: 700;
+.feedback-result-button {
+  min-height: 56px;
+  padding-inline: 26px;
+  box-shadow: 0 5px 14px rgb(22 72 50 / 18%);
+  font-size: 15px;
 }
 
 .rule-list {
@@ -1549,6 +1581,287 @@ h1 {
   }
 }
 
+.scenario-select {
+  margin: 8px 0 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.section-heading {
+  margin: 0 0 13px;
+}
+
+.section-heading h1 {
+  font-size: clamp(23px, 4vw, 29px);
+  letter-spacing: -0.04em;
+}
+
+.play-all-button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid #dce5dc;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--green-dark);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.play-all-button:hover {
+  border-color: #a7c1aa;
+  background: #f5f9f4;
+}
+
+.play-all-button:focus-visible {
+  outline: 3px solid #92b9a0;
+  outline-offset: 2px;
+}
+
+.scenario-preview {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.scenario-accordion[open] {
+  grid-column: 1 / -1;
+}
+
+.scenario-summary {
+  min-height: 105px;
+  gap: 13px;
+  padding: 11px;
+}
+
+.mission-art {
+  display: grid;
+  width: 104px;
+  height: 82px;
+  flex: 0 0 104px;
+  overflow: hidden;
+  place-items: center;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #e5f1e4, #d2e5d5);
+}
+
+.mission-art svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mission-art-S2 {
+  background: linear-gradient(145deg, #eceaf7, #dcdcf0);
+}
+
+.mission-art-S3 {
+  background: linear-gradient(145deg, #f8ece0, #f0d8bf);
+}
+
+.mission-art-S4 {
+  background: linear-gradient(145deg, #e3edf6, #cfdfed);
+}
+
+.mission-main {
+  gap: 7px;
+}
+
+.mission-title {
+  font-size: 12px;
+}
+
+.mission-meta {
+  font-size: 10px;
+}
+
+.mission-details-grid {
+  display: block;
+}
+
+.mission-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: -3px;
+}
+
+.mission-tags span {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #edf4ed;
+  color: #4e6855;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.scenario-details {
+  padding: 0 14px 14px;
+}
+
+.scenario-details-description {
+  margin: 11px 0 10px;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.mission-play-button {
+  min-height: 36px;
+  margin-top: 11px;
+  font-size: 10px;
+}
+
+.progress-dashboard {
+  display: grid;
+  grid-template-columns: 118px minmax(0, 1.1fr) minmax(0, 0.9fr);
+  align-items: stretch;
+  gap: 10px;
+  margin: 0 0 22px;
+  padding: 12px;
+  border-color: #e5eae3;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(29 54 39 / 4%);
+}
+
+.xp-card,
+.skill-progress,
+.relationship-progress {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #edf0eb;
+  border-radius: 12px;
+}
+
+.xp-card {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: #f3f8ef;
+}
+
+.xp-icon {
+  width: 32px;
+  height: 32px;
+  flex-basis: 32px;
+}
+
+.dashboard-icon {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+}
+
+.dashboard-icon svg {
+  display: block;
+  width: 19px;
+  height: 19px;
+}
+
+.xp-card strong {
+  color: var(--green-dark);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.xp-card strong small {
+  font-size: 10px;
+}
+
+.skill-progress,
+.relationship-progress {
+  display: grid;
+  align-content: center;
+  gap: 9px;
+  background: #fff;
+}
+
+.skill-row {
+  display: grid;
+  gap: 5px;
+}
+
+.skill-row + .skill-row,
+.rapport-row + .rapport-row {
+  margin-top: 0;
+}
+
+.skill-row-label {
+  min-height: 20px;
+  margin: 0;
+  gap: 7px;
+  font-size: 10px;
+}
+
+.skill-row-label > span:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+}
+
+.skill-row-label strong {
+  font-size: 10px;
+}
+
+.skill-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 7px;
+  background: #eaf2ec;
+  color: #447858;
+}
+
+.skill-icon-judgment {
+  background: #edf0f8;
+  color: #6475a4;
+}
+
+.skill-icon-tone {
+  background: #f8eee4;
+  color: #ad744a;
+}
+
+.skill-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.dashboard-meter {
+  height: 5px;
+}
+
+.rapport-row {
+  gap: 8px;
+}
+
+.relation-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+}
+
+.relation-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.rapport-content .skill-row-label {
+  margin-bottom: 5px;
+}
+
+.dashboard-lower-grid,
+.dashboard-heading,
+.dashboard-footnote,
+.xp-caption,
+.level-row,
+.local-save-note {
+  display: none;
+}
+
 @media (max-width: 560px) {
   .site-header,
   .site-footer {
@@ -1561,6 +1874,13 @@ h1 {
 
   .header-note {
     font-size: 11px;
+    max-width: 110px;
+    text-align: right;
+  }
+
+  .brand {
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
   .page-shell {
@@ -1606,44 +1926,74 @@ h1 {
     width: 100%;
   }
 
-  .progress-top-grid,
-  .dashboard-lower-grid {
+  .scenario-preview {
     grid-template-columns: 1fr;
   }
 
-  .progress-dashboard,
-  .scenario-select {
-    padding: 18px 15px;
-    border-radius: 17px;
+  .scenario-accordion[open] {
+    grid-column: auto;
   }
 
-  .dashboard-heading,
-  .section-heading {
-    align-items: flex-start;
+  .progress-dashboard {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 8px;
+    padding: 9px;
   }
 
-  .local-save-note,
-  .section-hint {
-    max-width: 110px;
-    padding-top: 7px;
-    line-height: 1.4;
+  .xp-card {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .xp-icon {
+    width: 27px;
+    height: 27px;
+    flex-basis: 27px;
+  }
+
+  .xp-card strong {
+    font-size: 17px;
+  }
+
+  .skill-progress {
+    gap: 6px;
+    padding: 9px;
+  }
+
+  .skill-row-label {
+    font-size: 9px;
+  }
+
+  .relationship-progress {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 9px;
+  }
+
+  .rapport-row {
+    gap: 6px;
+  }
+
+  .rapport-content .skill-row-label {
+    font-size: 9px;
+  }
+
+  .mission-art {
+    width: 76px;
+    height: 68px;
+    flex-basis: 76px;
   }
 
   .scenario-summary {
+    min-height: 88px;
     gap: 9px;
-    padding: 12px 10px;
-  }
-
-  .mission-index {
-    width: 33px;
-    height: 33px;
-    flex-basis: 33px;
-    border-radius: 10px;
+    padding: 9px;
   }
 
   .mission-progress {
-    width: 36px;
-    flex-basis: 36px;
+    width: 34px;
+    flex-basis: 34px;
   }
 
   .mission-title {
@@ -1652,23 +2002,6 @@ h1 {
 
   .mission-meta {
     font-size: 9px;
-  }
-
-  .scenario-details {
-    padding: 0 12px 14px;
-  }
-
-  .mission-details-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .mission-rapport {
-    width: 100%;
-    font-size: 14px;
-  }
-
-  .mission-play-button {
-    width: 100%;
   }
 
   .score-meter {
@@ -1691,9 +2024,38 @@ h1 {
   }
 
   .conversation-feedback {
-    gap: 20px;
+    gap: 14px;
     padding: 18px;
     border-radius: 18px;
+  }
+
+  .character-response-card,
+  .coaching-feedback-card {
+    padding: 15px;
+    border-radius: 15px;
+  }
+
+  .character-response-card .response-turn {
+    gap: 10px;
+  }
+
+  .character-response-card .character-avatar.is-compact {
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+  }
+
+  .character-response-card .response-dialogue p {
+    font-size: 14px;
+  }
+
+  .feedback-next-button {
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .feedback-result-button {
+    min-height: 56px;
   }
 
   .response-turn {
