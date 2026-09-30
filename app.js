@@ -338,20 +338,6 @@ function renderNode(nodeId) {
 }
 
 function choose(node, choice, answerText = choice.text) {
-  const scoreDelta = choice.is_aligned
-    ? scoreChangePerAnswer
-    : -(choice.score_penalty ?? scoreChangePerAnswer);
-  state.score = Math.max(0, Math.min(100, state.score + scoreDelta));
-  for (const dimension of Object.keys(state.scores)) {
-    state.scores[dimension] += choice.effects[dimension] ?? 0;
-  }
-  state.choices.push({
-    scenarioId: scenario.scenario_id,
-    nodeId: node.id,
-    choiceId: choice.id,
-  });
-
-  updateScoreMeter();
   renderChoiceFeedback(node, choice, answerText);
 }
 
@@ -402,9 +388,6 @@ async function renderChoiceFeedback(node, choice, answerText) {
   await new Promise((resolve) => window.setTimeout(resolve, thinkingDuration));
   if (!feedback.isConnected) return;
   feedback.className = `feedback-panel conversation-feedback${aligned ? "" : " is-misaligned"}`;
-  feedback.setAttribute("role", "button");
-  feedback.setAttribute("tabindex", "0");
-  feedback.setAttribute("aria-label", `${labels.tapToContinue}: ${nextStep}`);
   feedback.innerHTML = `
     <div class="player-message">
       <span class="message-label">${escapeText(labels.yourResponse)}</span>
@@ -430,6 +413,26 @@ async function renderChoiceFeedback(node, choice, answerText) {
       <span class="feedback-advance-action">${escapeText(nextStep)} →</span>
     </div>
   `;
+  await new Promise((resolve) => window.setTimeout(resolve, 500));
+  if (!feedback.isConnected) return;
+
+  const scoreDelta = choice.is_aligned
+    ? scoreChangePerAnswer
+    : -(choice.score_penalty ?? scoreChangePerAnswer);
+  state.score = Math.max(0, Math.min(100, state.score + scoreDelta));
+  for (const dimension of Object.keys(state.scores)) {
+    state.scores[dimension] += choice.effects[dimension] ?? 0;
+  }
+  state.choices.push({
+    scenarioId: scenario.scenario_id,
+    nodeId: node.id,
+    choiceId: choice.id,
+  });
+  updateScoreMeter();
+
+  feedback.setAttribute("role", "button");
+  feedback.setAttribute("tabindex", "0");
+  feedback.setAttribute("aria-label", `${labels.tapToContinue}: ${nextStep}`);
   feedback.addEventListener("click", target);
   feedback.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === " ") {
