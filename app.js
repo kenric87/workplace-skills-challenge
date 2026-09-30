@@ -12,7 +12,12 @@ const labels = {
   choose: "What would you do?",
   customAnswer: "Or write your own response",
   customAnswerPlaceholder: "Type your response here…",
+  customAnswerNotice: "Your answer is sent to Groq for brief feedback and scoring.",
   submitCustomAnswer: "Submit response",
+  evaluatingCustomAnswer: "Getting AI feedback…",
+  customAnswerError: "Could not evaluate your response. Please try again.",
+  customAnswerScore: "AI practice score",
+  customAnswerReason: "Why this score",
   step: "Question",
   outcome: "What happens next",
   aligned: "This choice aligns with the scenario rules",
@@ -41,7 +46,7 @@ const labels = {
   durationValue: "About 6–8 minutes · 10 decisions",
   notFound: "Scenario data not found",
   report: "Your practice profile",
-  reportIntro: "Your radar chart summarizes your choices across all four scenarios. Your feedback is predefined, so the challenge works without an AI service.",
+  reportIntro: "Your radar chart summarizes your choices across all four scenarios. Custom responses are evaluated by AI using the relevant scenario guidance.",
   scoreScale: "The radar chart summarizes your choices across the three practice dimensions.",
   chartLabel: "Radar chart showing practice indicators for compliance, judgment, and communication",
   completed: "Decisions completed",
@@ -307,6 +312,7 @@ function renderNode(nodeId) {
       </div>
       <form class="custom-answer-form" data-custom-answer-form>
         <label for="custom-answer">${escapeText(labels.customAnswer)}</label>
+        <p class="custom-answer-note">${escapeText(labels.customAnswerNotice)}</p>
         <textarea id="custom-answer" name="custom-answer" rows="3" maxlength="1000" required placeholder="${escapeText(labels.customAnswerPlaceholder)}"></textarea>
         <button class="primary-button" type="submit">${escapeText(labels.submitCustomAnswer)} →</button>
       </form>
@@ -328,13 +334,86 @@ function renderNode(nodeId) {
       answerField.focus();
       return;
     }
-    const presetChoice = node.choices.find((choice) => choice.is_aligned);
-    if (!presetChoice) {
-      renderError("This question has no predefined response for custom answers.");
-      return;
-    }
-    choose(node, presetChoice, answer);
+    submitCustomAnswer(node, answer);
   });
+}
+
+async function submitCustomAnswer(node, answer) {
+  const form = app.querySelector("[data-custom-answer-form]");
+  const submitButton = form?.querySelector('button[type="submit"]');
+  if (!form || !submitButton || form.dataset.pending === "true") return;
+  let status = form.querySelector(".custom-answer-status");
+  if (!status) {
+    status = document.createElement("p");
+    status.className = "custom-answer-status";
+    status.setAttribute("role", "status");
+    form.append(status);
+  }
+  status.textContent = labels.evaluatingCustomAnswer;
+
+  form.dataset.pending = "true";
+  submitButton.disabled = true;
+  submitButton.textContent = labels.evaluatingCustomAnswer;
+  app.querySelectorAll("[data-choice]").forEach((button) => {
+    button.disabled = true;
+  });
+
+  try {
+    if (!window.WORKPLACE_AI_ENDPOINT) {
+      throw new Error("The AI feedback service is not configured.");
+    }
+    const response = await fetch(window.WORKPLACE_AI_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        scenarioId: scenario.scenario_id,
+        nodeId: node.id,
+        answer,
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    let result;
+    try {
+      result = await response.json();
+    } catch {
+      throw new Error(labels.customAnswerError);
+    }
+    if (!response.ok) {
+      throw new Error(typeof result.error === "string" ? result.error : labels.customAnswerError);
+    }
+    if (
+      !result
+      || typeof result.reply !== "string"
+      || typeof result.reason !== "string"
+      || !Number.isInteger(result.score)
+      || result.score < 1
+      || result.score > 5
+    ) {
+      throw new Error(labels.customAnswerError);
+    }
+
+    const nextChoice = node.choices.find((choice) => choice.is_aligned);
+    if (!nextChoice) {
+      throw new Error("This question has no valid next step for a custom response.");
+    }
+    const dimensionEffect = result.score - 3;
+    const customChoice = {
+      ...nextChoice,
+      reply: result.reply,
+      consequence: result.reason,
+      effects: Object.fromEntries(dimensions.map((dimension) => [dimension, dimensionEffect])),
+    };
+    renderChoiceFeedback(node, customChoice, answer, { customScore: result.score });
+  } catch (error) {
+    console.error("Could not evaluate the custom response:", error);
+    form.dataset.pending = "false";
+    submitButton.disabled = false;
+    submitButton.textContent = `${labels.submitCustomAnswer} →`;
+    app.querySelectorAll("[data-choice]").forEach((button) => {
+      button.disabled = false;
+    });
+    status.textContent = error.message || labels.customAnswerError;
+  }
 }
 
 function choose(node, choice, answerText = choice.text) {
@@ -352,7 +431,7 @@ function updateScoreMeter() {
   scoreMeter.className = `score-meter-track score-band-${scoreBand(state.score)}`;
 }
 
-async function renderChoiceFeedback(node, choice, answerText) {
+async function renderChoiceFeedback(node, choice, answerText, { customScore } = {}) {
   const aligned = choice.is_aligned;
   const character = sceneCharacter(node);
   const target = choice.next
@@ -401,13 +480,17 @@ async function renderChoiceFeedback(node, choice, answerText) {
       </div>
     </div>
     <div class="feedback-summary">
-      <h2 class="feedback-title">${escapeText(aligned ? labels.aligned : labels.reconsider)}</h2>
+      <h2 class="feedback-title">${escapeText(customScore === undefined
+    ? (aligned ? labels.aligned : labels.reconsider)
+    : `${labels.customAnswerScore}: +${customScore}`)}</h2>
       <div class="explanation-block">
-        <h3 class="explanation-title">${escapeText(labels.explanation)}</h3>
+        <h3 class="explanation-title">${escapeText(customScore === undefined
+    ? labels.explanation
+    : labels.customAnswerReason)}</h3>
         <p class="feedback-copy">${escapeText(choice.consequence)}</p>
       </div>
     </div>
-    ${renderRules(choice.rule_refs)}
+    ${customScore === undefined ? renderRules(choice.rule_refs) : ""}
     <div class="feedback-advance-hint" aria-hidden="true">
       <span>${escapeText(labels.tapToContinue)}</span>
       <span class="feedback-advance-action">${escapeText(nextStep)} →</span>
@@ -416,9 +499,9 @@ async function renderChoiceFeedback(node, choice, answerText) {
   await new Promise((resolve) => window.setTimeout(resolve, 500));
   if (!feedback.isConnected) return;
 
-  const scoreDelta = choice.is_aligned
+  const scoreDelta = customScore ?? (choice.is_aligned
     ? scoreChangePerAnswer
-    : -(choice.score_penalty ?? scoreChangePerAnswer);
+    : -(choice.score_penalty ?? scoreChangePerAnswer));
   state.score = Math.max(0, Math.min(100, state.score + scoreDelta));
   for (const dimension of Object.keys(state.scores)) {
     state.scores[dimension] += choice.effects[dimension] ?? 0;
