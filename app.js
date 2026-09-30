@@ -32,7 +32,6 @@ const labels = {
   reflectionGood: "Good reflection. You identified the key principle in this scenario.",
   reflectionTry: "Review the scenario feedback and choose the option that follows the relevant rule and process.",
   noReflection: "Choose the statement that best reflects what you learned.",
-  scoreNote: "These practice indicators are based only on your choices in these scenarios. They are not validated measures of ability or a judgment of you as a person.",
   currentScore: "Current score",
   finalScore: "Final score",
   compliance: "Compliance",
@@ -46,8 +45,6 @@ const labels = {
   durationValue: "About 6–8 minutes · 10 decisions",
   notFound: "Scenario data not found",
   report: "Your practice profile",
-  reportIntro: "Your radar chart summarizes your choices across all four scenarios. Custom responses are evaluated by AI using the relevant scenario guidance.",
-  scoreScale: "The radar chart summarizes your choices across the three practice dimensions.",
   chartLabel: "Radar chart showing practice indicators for compliance, judgment, and communication",
   completed: "Decisions completed",
   nextScenario: "Preview next scenario",
@@ -840,7 +837,6 @@ function renderReport(ending) {
     <section class="game-card report-card">
       <p class="eyebrow">${completedDecisionCount} ${escapeText(labels.completed)} · ${scenarioRunIndexes.length} scenarios</p>
       <h1>${escapeText(labels.report)}</h1>
-      <p class="report-intro">${escapeText(labels.reportIntro)}</p>
       <section class="final-score-card" aria-label="${escapeText(labels.finalScore)}">
         <div class="final-score-heading">
           <span>${escapeText(labels.finalScore)}</span>
@@ -851,7 +847,6 @@ function renderReport(ending) {
         </div>
       </section>
       <div class="radar-wrap">${renderRadarChart(scores)}</div>
-      <p class="score-note">${escapeText(labels.scoreScale)} ${escapeText(labels.scoreNote)}</p>
       <section class="feedback-panel">
         <h2 class="feedback-title">Final reflection</h2>
         <p class="feedback-copy">${escapeText(ending.reflection.prompt)}</p>
