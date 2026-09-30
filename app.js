@@ -75,6 +75,184 @@ const dimensions = ["compliance", "judgment", "tone"];
 const startingScore = 70;
 const scoreChangePerAnswer = 3;
 const severeChoicePenalty = 6;
+const progressStorageKey = "workplace-lab-progress-v1";
+const xpPerDecision = 10;
+let scenarioRunIndexes = [];
+let currentRunPosition = 0;
+let learnerProgress;
+
+function emptyLearnerProgress() {
+  return {
+    xp: 0,
+    skills: Object.fromEntries(dimensions.map((dimension) => [
+      dimension,
+      { total: 0, count: 0 },
+    ])),
+    relationships: { manager: 50, teammate: 50 },
+    scenarioNodes: {},
+    completedScenarios: [],
+  };
+}
+
+function loadLearnerProgress() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(progressStorageKey) || "null");
+    const defaults = emptyLearnerProgress();
+    if (!saved || typeof saved !== "object") return defaults;
+
+    return {
+      ...defaults,
+      ...saved,
+      skills: Object.fromEntries(dimensions.map((dimension) => [
+        dimension,
+        {
+          total: Number.isFinite(saved.skills?.[dimension]?.total)
+            ? saved.skills[dimension].total
+            : 0,
+          count: Number.isFinite(saved.skills?.[dimension]?.count)
+            ? saved.skills[dimension].count
+            : 0,
+        },
+      ])),
+      relationships: {
+        manager: Number.isFinite(saved.relationships?.manager)
+          ? Math.max(0, Math.min(100, saved.relationships.manager))
+          : 50,
+        teammate: Number.isFinite(saved.relationships?.teammate)
+          ? Math.max(0, Math.min(100, saved.relationships.teammate))
+          : 50,
+      },
+      scenarioNodes: saved.scenarioNodes && typeof saved.scenarioNodes === "object"
+        ? saved.scenarioNodes
+        : {},
+      completedScenarios: Array.isArray(saved.completedScenarios)
+        ? saved.completedScenarios
+        : [],
+    };
+  } catch (error) {
+    console.error("Could not load saved practice progress:", error);
+    return emptyLearnerProgress();
+  }
+}
+
+function saveLearnerProgress() {
+  try {
+    localStorage.setItem(progressStorageKey, JSON.stringify(learnerProgress));
+  } catch (error) {
+    console.error("Could not save practice progress on this device:", error);
+  }
+}
+
+function scenarioAnsweredCount(scenarioItem) {
+  return new Set(learnerProgress.scenarioNodes[scenarioItem.scenario_id] || []).size;
+}
+
+function progressSkillScore(dimension) {
+  const skill = learnerProgress.skills[dimension];
+  if (!skill.count) return 50;
+  return Math.round(Math.max(0, Math.min(100, ((skill.total / skill.count + 2) / 4) * 100)));
+}
+
+function progressRelationshipFor(scenarioItem) {
+  if (scenarioItem.scenario_id === "S4") return learnerProgress.relationships.manager;
+  if (scenarioItem.scenario_id === "S2") return learnerProgress.relationships.teammate;
+  return null;
+}
+
+function renderProgressDashboard() {
+  const level = Math.floor(learnerProgress.xp / 100) + 1;
+  const levelXp = learnerProgress.xp % 100;
+  const decisionsCompleted = Object.values(learnerProgress.scenarioNodes)
+    .reduce((sum, nodeIds) => sum + new Set(nodeIds).size, 0);
+  const skillCards = [
+    { id: "compliance", title: "Policy awareness" },
+    { id: "judgment", title: "Decision-making" },
+    { id: "tone", title: "Communication" },
+  ];
+
+  return `
+    <section class="progress-dashboard" aria-labelledby="progress-title">
+      <div class="dashboard-heading">
+        <div>
+          <p class="eyebrow">Your practice profile</p>
+          <h2 id="progress-title">Progress dashboard</h2>
+        </div>
+        <span class="local-save-note">Saved on this device</span>
+      </div>
+      <div class="progress-top-grid">
+        <article class="xp-card">
+          <div class="xp-heading">
+            <span class="xp-icon" aria-hidden="true">✦</span>
+            <div>
+              <span class="dashboard-label">Experience points</span>
+              <strong>${learnerProgress.xp} XP</strong>
+            </div>
+          </div>
+          <div class="level-row"><span>Level ${level}</span><span>${levelXp} / 100 XP to next level</span></div>
+          <div class="dashboard-meter" role="meter" aria-label="Progress to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${levelXp}">
+            <span style="width:${levelXp}%"></span>
+          </div>
+          <p class="xp-caption">Earn ${xpPerDecision} XP for each new decision, plus a bonus for strong responses.</p>
+        </article>
+        <article class="activity-card">
+          <span class="dashboard-label">Decisions practised</span>
+          <strong>${decisionsCompleted} <small>/ ${totalQuestions}</small></strong>
+          <p>${learnerProgress.completedScenarios.length} of ${scenarios.length} scenarios completed</p>
+        </article>
+      </div>
+      <div class="dashboard-lower-grid">
+        <section class="skill-progress" aria-labelledby="skills-title">
+          <h3 id="skills-title">Skill practice</h3>
+          ${skillCards.map((skill) => {
+    const score = progressSkillScore(skill.id);
+    return `
+            <div class="skill-row">
+              <div class="skill-row-label"><span>${skill.title}</span><strong>${learnerProgress.skills[skill.id].count ? `${score}%` : "Not started"}</strong></div>
+              <div class="dashboard-meter skill-meter" role="meter" aria-label="${skill.title} practice indicator" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${score}">
+                <span style="width:${score}%"></span>
+              </div>
+            </div>
+          `;
+  }).join("")}
+          <p class="dashboard-footnote">Practice indicators, not a formal skills assessment.</p>
+        </section>
+        <section class="relationship-progress" aria-labelledby="rapport-title">
+          <h3 id="rapport-title">Scenario rapport</h3>
+          <div class="rapport-row">
+            <div class="rapport-avatar manager-avatar" aria-hidden="true">A</div>
+            <div class="rapport-content">
+              <div class="skill-row-label"><span>Alex · Manager</span><strong>${learnerProgress.relationships.manager}%</strong></div>
+              <div class="dashboard-meter rapport-meter" role="meter" aria-label="Practice rapport with Alex the manager" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${learnerProgress.relationships.manager}">
+                <span style="width:${learnerProgress.relationships.manager}%"></span>
+              </div>
+            </div>
+          </div>
+          <div class="rapport-row">
+            <div class="rapport-avatar teammate-avatar" aria-hidden="true">C</div>
+            <div class="rapport-content">
+              <div class="skill-row-label"><span>Casey · Teammate</span><strong>${learnerProgress.relationships.teammate}%</strong></div>
+              <div class="dashboard-meter rapport-meter" role="meter" aria-label="Practice rapport with Casey the teammate" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${learnerProgress.relationships.teammate}">
+                <span style="width:${learnerProgress.relationships.teammate}%"></span>
+              </div>
+            </div>
+          </div>
+          <p class="dashboard-footnote">Fictional rapport starts at 50 and shifts with your dialogue choices.</p>
+        </section>
+      </div>
+    </section>
+  `;
+}
+
+function startChallenge(scenarioIndexes) {
+  state = newGame();
+  scenarioRunIndexes = scenarioIndexes;
+  currentRunPosition = 0;
+  scenarioIndex = scenarioRunIndexes[currentRunPosition];
+  scenario = scenarios[scenarioIndex];
+  nodeById = new Map(scenario.nodes.map((node) => [node.id, node]));
+  endingById = new Map(scenario.endings.map((ending) => [ending.id, ending]));
+  renderScenarioIntro();
+}
 
 function scoreBand(score) {
   if (score >= 70) return "green";
@@ -113,42 +291,91 @@ function renderLanding() {
   app.innerHTML = `
     <section class="hero-card">
       <div class="hero-top">
-        <p class="eyebrow">Workplace Lab · Interactive practice</p>
-        <h1>Workplace Skills Challenge</h1>
-        <p class="hero-description">Practice handling sensitive information, giving useful feedback, responding to media inquiries, and managing an unexpected deadline. Make choices across four short scenarios, then review your practice profile.</p>
+        <div class="hero-badge"><span class="hero-badge-dot"></span> Workplace Lab · Interactive practice</div>
+        <h1>Build your <span>workplace skills</span></h1>
+        <p class="hero-description">Choose a scenario, make your call, and see how your skills develop with each decision.</p>
+        <div class="hero-stats" aria-label="Challenge overview">
+          <span><strong>${scenarios.length}</strong> scenarios</span>
+          <span><strong>${totalQuestions}</strong> decisions</span>
+          <span><strong>+${xpPerDecision}</strong> XP per new decision</span>
+        </div>
       </div>
       <div class="hero-bottom">
         <div>
-          <span class="meta-label">${escapeText(labels.format)}</span>
-          <span class="meta-value">4 scenarios · 10 decisions · 3 practice dimensions</span>
+          <span class="meta-label">Ready for a full run?</span>
+          <span class="meta-value">Play every scenario in sequence</span>
         </div>
-        <div>
-          <span class="meta-label">${escapeText(labels.duration)}</span>
-          <span class="meta-value">${escapeText(labels.durationValue)}</span>
-        </div>
-        <button class="primary-button" type="button" data-action="start">${escapeText(labels.start)} →</button>
+        <button class="primary-button" type="button" data-action="start">Start full challenge →</button>
       </div>
     </section>
-    <section class="scenario-preview" aria-label="Challenge scenarios">
-      ${scenarios.map((item, index) => `
-        <article class="scenario-preview-card">
-          <span class="preview-number">0${index + 1}</span>
-          <div>
-            <h2>${escapeText(item.title)}</h2>
-            <p>${item.nodes.length} ${item.nodes.length === 1 ? "decision" : "decisions"} · ${escapeText(item.rule_ids.map((id) => ruleById.get(id)?.title ?? id).join(" · "))}</p>
-          </div>
-        </article>
-      `).join("")}
+    ${renderProgressDashboard()}
+    <section class="scenario-select" aria-labelledby="scenario-select-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Choose your next mission</p>
+          <h2 id="scenario-select-title">Scenario missions</h2>
+        </div>
+        <span class="section-hint">Tap a mission to preview</span>
+      </div>
+      <div class="scenario-preview" aria-label="Challenge scenarios">
+        ${scenarios.map((item, index) => {
+    const answered = scenarioAnsweredCount(item);
+    const percent = Math.round((answered / item.nodes.length) * 100);
+    const relationship = progressRelationshipFor(item);
+    const goals = item.learning_goals || item.rule_ids.map((id) => ruleById.get(id)?.title ?? id);
+    return `
+          <details class="scenario-accordion">
+            <summary class="scenario-summary">
+              <span class="mission-index">${String(index + 1).padStart(2, "0")}</span>
+              <span class="mission-main">
+                <span class="mission-title">${escapeText(item.title)}</span>
+                <span class="mission-meta">${item.nodes.length} ${item.nodes.length === 1 ? "decision" : "decisions"} · ${answered === item.nodes.length ? "Complete" : `${percent}% explored`}</span>
+              </span>
+              <span class="mission-progress" aria-hidden="true"><span style="width:${percent}%"></span></span>
+              <span class="mission-chevron" aria-hidden="true">⌄</span>
+            </summary>
+            <div class="scenario-details">
+              <p class="scenario-details-description">${escapeText(item.preview_description)}</p>
+              <div class="mission-details-grid">
+                <div>
+                  <span class="mission-detail-label">Skills in focus</span>
+                  <ul class="goal-list">${goals.map((goal) => `<li>${escapeText(goal)}</li>`).join("")}</ul>
+                </div>
+                ${relationship === null ? "" : `
+                  <div class="mission-rapport">
+                    <span class="mission-detail-label">Scenario rapport · ${item.scenario_id === "S4" ? "Manager" : "Teammate"}</span>
+                    <strong>${relationship}%</strong>
+                    <div class="dashboard-meter rapport-meter" aria-hidden="true"><span style="width:${relationship}%"></span></div>
+                  </div>
+                `}
+              </div>
+              <button class="mission-play-button" type="button" data-play-scenario="${index}">
+                ${answered === item.nodes.length ? "Replay mission" : "Play this mission"} <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </details>
+        `;
+  }).join("")}
+      </div>
+      <p class="dashboard-footnote">Progress is stored only in this browser. Scores and rapport are illustrative practice feedback.</p>
     </section>
   `;
 
   app.querySelector('[data-action="start"]').addEventListener("click", () => {
-    state = newGame();
-    scenarioIndex = 0;
-    scenario = scenarios[scenarioIndex];
-    nodeById = new Map(scenario.nodes.map((node) => [node.id, node]));
-    endingById = new Map(scenario.endings.map((ending) => [ending.id, ending]));
-    renderScenarioIntro();
+    startChallenge(scenarios.map((_, index) => index));
+  });
+  app.querySelectorAll("[data-play-scenario]").forEach((button) => {
+    button.addEventListener("click", () => {
+      startChallenge([Number(button.dataset.playScenario)]);
+    });
+  });
+  app.querySelectorAll(".scenario-accordion").forEach((accordion) => {
+    accordion.addEventListener("toggle", () => {
+      if (!accordion.open) return;
+      app.querySelectorAll(".scenario-accordion").forEach((other) => {
+        if (other !== accordion) other.open = false;
+      });
+    });
   });
 }
 
@@ -163,12 +390,15 @@ function newGame() {
 
 function progressFor(nodeId) {
   const index = scenario.nodes.findIndex((node) => node.id === nodeId);
-  const previousQuestions = scenarios
-    .slice(0, scenarioIndex)
+  const previousQuestions = scenarioRunIndexes
+    .slice(0, currentRunPosition)
+    .map((scenarioRunIndex) => scenarios[scenarioRunIndex])
     .reduce((sum, item) => sum + item.nodes.length, 0);
   return {
     current: previousQuestions + index + 1,
-    total: totalQuestions,
+    total: scenarioRunIndexes
+      .map((scenarioRunIndex) => scenarios[scenarioRunIndex])
+      .reduce((sum, item) => sum + item.nodes.length, 0),
   };
 }
 
@@ -439,7 +669,7 @@ async function renderChoiceFeedback(node, choice, answerText, { customScore } = 
     : () => completeScenario(choice.ending_id);
   const nextStep = choice.next
     ? labels.next
-    : scenarioIndex < scenarios.length - 1
+    : currentRunPosition < scenarioRunIndexes.length - 1
       ? labels.nextScenario
       : labels.resultButton;
 
@@ -511,6 +741,7 @@ async function renderChoiceFeedback(node, choice, answerText, { customScore } = 
     nodeId: node.id,
     choiceId: choice.id,
   });
+  recordPracticeProgress(node, choice, customScore);
   updateScoreMeter();
 
   feedback.setAttribute("role", "button");
@@ -525,6 +756,41 @@ async function renderChoiceFeedback(node, choice, answerText, { customScore } = 
   });
 }
 
+function recordPracticeProgress(node, choice, customScore) {
+  const scenarioId = scenario.scenario_id;
+  const answeredNodes = new Set(learnerProgress.scenarioNodes[scenarioId] || []);
+  if (answeredNodes.has(node.id)) return;
+
+  answeredNodes.add(node.id);
+  learnerProgress.scenarioNodes[scenarioId] = [...answeredNodes];
+  learnerProgress.xp += xpPerDecision + (customScore === undefined
+    ? (choice.is_aligned ? 5 : 0)
+    : (customScore >= 4 ? 5 : 0));
+
+  for (const dimension of dimensions) {
+    learnerProgress.skills[dimension].total += choice.effects[dimension] ?? 0;
+    learnerProgress.skills[dimension].count += 1;
+  }
+
+  const relationshipKey = scenarioId === "S4"
+    ? "manager"
+    : scenarioId === "S2"
+      ? "teammate"
+      : null;
+  if (relationshipKey) {
+    learnerProgress.relationships[relationshipKey] = Math.max(
+      0,
+      Math.min(100, learnerProgress.relationships[relationshipKey] + (choice.effects.tone ?? 0) * 5),
+    );
+  }
+
+  if (answeredNodes.size === scenario.nodes.length
+    && !learnerProgress.completedScenarios.includes(scenarioId)) {
+    learnerProgress.completedScenarios.push(scenarioId);
+  }
+  saveLearnerProgress();
+}
+
 function completeScenario(endingId) {
   const ending = endingById.get(endingId);
   if (!ending) {
@@ -532,8 +798,9 @@ function completeScenario(endingId) {
     return;
   }
 
-  if (scenarioIndex < scenarios.length - 1) {
-    scenarioIndex += 1;
+  if (currentRunPosition < scenarioRunIndexes.length - 1) {
+    currentRunPosition += 1;
+    scenarioIndex = scenarioRunIndexes[currentRunPosition];
     scenario = scenarios[scenarioIndex];
     nodeById = new Map(scenario.nodes.map((node) => [node.id, node]));
     endingById = new Map(scenario.endings.map((item) => [item.id, item]));
@@ -588,13 +855,14 @@ function renderRadarChart(scores) {
 }
 
 function renderReport(ending) {
+  const completedDecisionCount = state.choices.length;
   const scores = Object.fromEntries(dimensions.map((dimension) => [
     dimension,
     state.score === 100 ? 100 : normalizedScore(dimension),
   ]));
   app.innerHTML = `
     <section class="game-card report-card">
-      <p class="eyebrow">${state.choices.length} ${escapeText(labels.completed)} · ${scenarios.length} scenarios</p>
+      <p class="eyebrow">${completedDecisionCount} ${escapeText(labels.completed)} · ${scenarioRunIndexes.length} scenarios</p>
       <h1>${escapeText(labels.report)}</h1>
       <p class="report-intro">${escapeText(labels.reportIntro)}</p>
       <section class="final-score-card" aria-label="${escapeText(labels.finalScore)}">
@@ -622,6 +890,7 @@ function renderReport(ending) {
       </section>
       <div class="result-actions">
         <button class="primary-button" type="button" data-action="restart">${escapeText(labels.playAgain)} ↻</button>
+        <button class="secondary-button" type="button" data-action="home">Back to progress dashboard</button>
       </div>
     </section>
   `;
@@ -639,12 +908,11 @@ function renderReport(ending) {
   });
 
   app.querySelector('[data-action="restart"]').addEventListener("click", () => {
-    state = newGame();
-    scenarioIndex = 0;
-    scenario = scenarios[scenarioIndex];
-    nodeById = new Map(scenario.nodes.map((node) => [node.id, node]));
-    endingById = new Map(scenario.endings.map((item) => [item.id, item]));
-    renderScenarioIntro();
+    startChallenge(scenarioRunIndexes);
+  });
+
+  app.querySelector('[data-action="home"]').addEventListener("click", () => {
+    renderLanding();
   });
 }
 
@@ -698,6 +966,7 @@ function validateScenario(data, rules) {
 
 async function initialize() {
   try {
+    learnerProgress = loadLearnerProgress();
     const [scenarioResponses, rulesResponse] = await Promise.all([
       Promise.all(scenarioUrls.map((url) => fetch(url))),
       fetch(rulesUrl),
