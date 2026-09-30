@@ -10,6 +10,9 @@ const rulesUrl = new URL("./northwind-team-conduct-guide.json", window.location.
 const labels = {
   start: "Start the challenge",
   choose: "What would you do?",
+  customAnswer: "Or write your own response",
+  customAnswerPlaceholder: "Type your response here…",
+  submitCustomAnswer: "Submit response",
   step: "Question",
   outcome: "What happens next",
   aligned: "This choice aligns with the scenario rules",
@@ -302,6 +305,11 @@ function renderNode(nodeId) {
           </button>
         `).join("")}
       </div>
+      <form class="custom-answer-form" data-custom-answer-form>
+        <label for="custom-answer">${escapeText(labels.customAnswer)}</label>
+        <textarea id="custom-answer" name="custom-answer" rows="3" maxlength="1000" required placeholder="${escapeText(labels.customAnswerPlaceholder)}"></textarea>
+        <button class="primary-button" type="submit">${escapeText(labels.submitCustomAnswer)} →</button>
+      </form>
     </section>
   `;
 
@@ -311,9 +319,25 @@ function renderNode(nodeId) {
       choose(node, choice);
     });
   });
+
+  app.querySelector("[data-custom-answer-form]").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const answerField = app.querySelector("#custom-answer");
+    const answer = answerField.value.trim();
+    if (!answer) {
+      answerField.focus();
+      return;
+    }
+    const presetChoice = node.choices.find((choice) => choice.is_aligned);
+    if (!presetChoice) {
+      renderError("This question has no predefined response for custom answers.");
+      return;
+    }
+    choose(node, presetChoice, answer);
+  });
 }
 
-function choose(node, choice) {
+function choose(node, choice, answerText = choice.text) {
   const scoreDelta = choice.is_aligned
     ? scoreChangePerAnswer
     : -(choice.score_penalty ?? scoreChangePerAnswer);
@@ -328,7 +352,7 @@ function choose(node, choice) {
   });
 
   updateScoreMeter();
-  renderChoiceFeedback(node, choice);
+  renderChoiceFeedback(node, choice, answerText);
 }
 
 function updateScoreMeter() {
@@ -342,7 +366,7 @@ function updateScoreMeter() {
   scoreMeter.className = `score-meter-track score-band-${scoreBand(state.score)}`;
 }
 
-async function renderChoiceFeedback(node, choice) {
+async function renderChoiceFeedback(node, choice, answerText) {
   const aligned = choice.is_aligned;
   const character = sceneCharacter(node);
   const target = choice.next
@@ -360,7 +384,7 @@ async function renderChoiceFeedback(node, choice) {
   feedback.innerHTML = `
     <div class="player-message">
       <span class="message-label">${escapeText(labels.yourResponse)}</span>
-      <p>${escapeText(choice.text)}</p>
+      <p>${escapeText(answerText)}</p>
     </div>
     <div class="thinking-message" role="status">
       ${renderCharacterAvatar(character, true, true)}
@@ -371,6 +395,7 @@ async function renderChoiceFeedback(node, choice) {
     </div>
   `;
   app.querySelector(".choice-list").replaceWith(feedback);
+  app.querySelector("[data-custom-answer-form]")?.remove();
   app.querySelector(".choice-heading").remove();
 
   const thinkingDuration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1250;
@@ -381,6 +406,10 @@ async function renderChoiceFeedback(node, choice) {
   feedback.setAttribute("tabindex", "0");
   feedback.setAttribute("aria-label", `${labels.tapToContinue}: ${nextStep}`);
   feedback.innerHTML = `
+    <div class="player-message">
+      <span class="message-label">${escapeText(labels.yourResponse)}</span>
+      <p>${escapeText(answerText)}</p>
+    </div>
     <div class="response-turn">
       ${renderCharacterAvatar(character, true)}
       <div class="response-dialogue">

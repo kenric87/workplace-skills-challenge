@@ -449,6 +449,47 @@ h1 {
   gap: 11px;
 }
 
+.custom-answer-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.custom-answer-form label {
+  color: #49584e;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.custom-answer-form textarea {
+  width: 100%;
+  min-height: 96px;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: #34443a;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.custom-answer-form textarea::placeholder {
+  color: #849087;
+}
+
+.custom-answer-form textarea:focus-visible {
+  outline: 3px solid #92b9a0;
+  outline-offset: 2px;
+}
+
+.custom-answer-form .primary-button {
+  justify-self: end;
+}
+
 .choice-button {
   display: flex;
   width: 100%;
